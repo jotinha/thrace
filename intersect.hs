@@ -35,7 +35,7 @@ makeRay :: Vector -> Vector -> Ray
 makeRay o d = Ray o d' where d' = vnormalize d
 
 rayPointAt :: Ray -> Float -> Vector
-rayPointAt (Ray o d) t = o `vplus` (d `smult` t)
+rayPointAt (Ray o d) t = o .+. (d .* t)
 
 rayIntersect :: Ray -> Geometry -> Intersection
 rayIntersect ray@(Ray o d) (Sphere c r)   | s < 0 && l2 > r2  = None
@@ -43,10 +43,10 @@ rayIntersect ray@(Ray o d) (Sphere c r)   | s < 0 && l2 > r2  = None
                                           | m2 > r2 = None
                                           | otherwise =  Frontside p t
   where 
-    l = c `vminus` o
-    s = l `vdot` d
+    l = c .-. o
+    s = l `dot` d
     r2 = r * r
-    l2 = vsq l
+    l2 = l `dot` l
     s2 = s * s
     m2 = l2 - s2
     q = sqrt (r2 - m2)
@@ -96,8 +96,8 @@ traceRay world ray =
         inShadowOf (Light lightPos _ _) = length (rayIntersections objects' lightray) > 0
           where 
             objects' = objects world
-            dir = (lightPos `vminus` p)
-            p0 =  p `vplus` (dir `smult` 0.001) --some tolerance to avoid  numerical problems
+            dir = (lightPos .-. p)
+            p0 =  p .+. (dir .* 0.001) --some tolerance to avoid  numerical problems
             lightray = makeRay p0 dir 
 
           
