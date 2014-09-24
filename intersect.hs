@@ -1,11 +1,11 @@
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
-import Data.Char (chr)
-import Core
+import Vector
+import Utils
 
-data Geometry = Sphere { center :: Vector, radius :: Float }
+data Geometry = Sphere { center :: Vector3, radius :: Float }
 
-data Ray = Ray { origin    :: Vector, direction :: Vector } deriving (Show)
+data Ray = Ray { origin    :: Vector3, direction :: Vector3 } deriving (Show)
 
 data Object = Object {
   geometry :: Geometry,
@@ -25,16 +25,16 @@ data World = World {
   backgroundColor :: Color
 }
 
-data Light = Light Vector Color Float --position color intensity
+data Light = Light Vector3 Color Float --position color intensity
 
 type Resolution = (Int, Int)
 
-data Intersection = None | Backside Vector Float | Frontside Vector Float deriving (Eq)
+data Intersection = None | Backside Vector3 Float | Frontside Vector3 Float deriving (Eq)
 
-makeRay :: Vector -> Vector -> Ray
+makeRay :: Vector3 -> Vector3 -> Ray
 makeRay o d = Ray o d' where d' = vnormalize d
 
-rayPointAt :: Ray -> Float -> Vector
+rayPointAt :: Ray -> Float -> Vector3
 rayPointAt (Ray o d) t = o .+. (d .* t)
 
 rayIntersect :: Ray -> Geometry -> Intersection
@@ -122,7 +122,7 @@ makeImage res@(width,height) world = [
     j <- [1..width]
   ]
   where
-    castRay (a,b,c) = makeRay (Vector 0 0 0) (Vector a b c)
+    castRay (a,b,c) = makeRay (Vector3 0 0 0) (Vector3 a b c)
 
 writePPM :: Resolution -> [Color] -> IO ()
 writePPM (width,height) pixels  | width*height /= length pixels = error "Invalid width,height"
@@ -137,20 +137,20 @@ writePPM (width,height) pixels  | width*height /= length pixels = error "Invalid
     color2ints :: (Integral a, Num a, Ord a) => Color -> [a]
     color2ints (Color rf gf bf) = map ((max 0) . (min 255) . round . (*255)) [rf,gf,bf]
     
---main = print $ rayIntersect (makeRay (Vector 0 0 0) (Vector 0 0 10)) (Sphere (Vector 0 0 10) 2)
+--main = print $ rayIntersect (makeRay (Vector3 0 0 0) (Vector3 0 0 10)) (Sphere (Vector3 0 0 10) 2)
 
 myWorld = World {
   objects = [
-    Object (Sphere (Vector 0    0  20) 5 ) (Color 1 0.5 0.2) "sphere1",
-    Object (Sphere (Vector 0 (-30) 20) 20 ) (Color 1 0 0) "sphere2",
-    Object (Sphere (Vector (-20) 0 20) 5 ) (Color 0 0.8 0.0) "sphere3",
-    Object (Sphere (Vector 0 40 100) 5 ) (Color 0 0.4 0.0) "sphere4",
-    Object (Sphere (Vector 5 5 50) 5 ) (Color 0.6 0.5 1.0) "sphere5"
+    Object (Sphere (Vector3 0    0  20) 5 ) (Color 1 0.5 0.2) "sphere1",
+    Object (Sphere (Vector3 0 (-30) 20) 20 ) (Color 1 0 0) "sphere2",
+    Object (Sphere (Vector3 (-20) 0 20) 5 ) (Color 0 0.8 0.0) "sphere3",
+    Object (Sphere (Vector3 0 40 100) 5 ) (Color 0 0.4 0.0) "sphere4",
+    Object (Sphere (Vector3 5 5 50) 5 ) (Color 0.6 0.5 1.0) "sphere5"
   ],
   lights = [
-    Light (Vector 20 100 0) (Color 1 1 1) 0.5,
-    Light (Vector (-20) 20 10) (Color 1 1 1) 0.5
-    --Light (Vector 0 0 0) (Color 1 1 1) 1
+    Light (Vector3 20 100 0) (Color 1 1 1) 0.5,
+    Light (Vector3 (-20) 20 10) (Color 1 1 1) 0.5
+    --Light (Vector3 0 0 0) (Color 1 1 1) 1
   ],
   backgroundColor = Color 1 1 1
 }
