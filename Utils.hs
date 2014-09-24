@@ -16,3 +16,10 @@ withinRange minx maxx x = x >= minx && x <= maxx
 
 isEmpty :: [a] -> Bool
 isEmpty xs = length xs == 0
+
+isNothing :: Maybe a -> Bool
+isNothing Nothing  = True
+isNothing (Just _) = False
+
+isSomething :: Maybe a -> Bool
+isSomething = not . isNothing
