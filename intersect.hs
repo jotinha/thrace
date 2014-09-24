@@ -44,9 +44,9 @@ rayIntersect ray@(Ray o d) (Sphere c r)   | s < 0 && l2 > r2  = None
                                           | otherwise =  Frontside p t
   where 
     l = c .-. o
-    s = l `dot` d
+    s = l `vdot` d
     r2 = r * r
-    l2 = l `dot` l
+    l2 = l `vdot` l
     s2 = s * s
     m2 = l2 - s2
     q = sqrt (r2 - m2)
