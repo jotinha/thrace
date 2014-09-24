@@ -3,7 +3,10 @@ import qualified Data.ByteString.Char8 as BC
 import Vector
 import Utils
 
-data Geometry = Sphere { center :: Vector3, radius :: Float }
+data Geometry = 
+  Sphere Vector3 Float | -- center and radius
+  Plane Vector3 Float    -- normal and constant
+
 
 data Ray = Ray { origin    :: Vector3, direction :: Vector3 } deriving (Show)
 
@@ -38,6 +41,8 @@ rayPointAt :: Ray -> Float -> Vector3
 rayPointAt (Ray o d) t = o .+. (d .* t)
 
 rayIntersect :: Ray -> Geometry -> Intersection
+
+--Ray - Sphere intersection
 rayIntersect ray@(Ray o d) (Sphere c r)   | s < 0 && l2 > r2  = None
                                           | l2 <= r2 = Backside p t
                                           | m2 > r2 = None
@@ -55,6 +60,18 @@ rayIntersect ray@(Ray o d) (Sphere c r)   | s < 0 && l2 > r2  = None
     t = if t0 > 0 then t0 else t1
     p = rayPointAt ray t
 
+-- Ray - Plane intersection
+rayIntersect ray@(Ray o d) (Plane n const)  | ndist == 0  = Backside o 0  --origin of ray is in plane
+                                            | den == 0    = None          --parallel to plane (since ndist != 0 it's not coplanar)
+                                            | t <  0      = None          --ray facing away from plane
+                                            | ndist <  0  = Backside p t  --origin behind plane
+                                            | ndist > 0   = Frontside p t --origin in front of plane
+  where
+    ndist = (n `vdot` o) + const   --normal distance from origin to plane
+    den = n `vdot` d
+    t = - (ndist / den)
+    p = rayPointAt ray t    
+
 rayIntersections :: [Object] -> Ray -> [(Object,Intersection)]
 rayIntersections []   _     = []
 rayIntersections (o:os) ray = (rayIntersect' o) ++ (rayIntersections os ray)
@@ -64,41 +81,50 @@ rayIntersections (o:os) ray = (rayIntersect' o) ++ (rayIntersections os ray)
                                               int@(Backside  _ _) -> [(obj,int)]
                                               int@(Frontside _ _) -> [(obj,int)]
 
+rayIntersectionsWithinRange :: (Float, Float) -> [Object] -> Ray -> [(Object,Intersection)]
+rayIntersectionsWithinRange (tmin,tmax) objs ray = (filter (withinRange tmin tmax . gett)) $ rayIntersections objs ray
+  
+gett :: (Object,Intersection) -> Float
+gett (_,(Frontside _ t)) = t
+gett (_,(Backside _ t))  = t
 
-rayFrontIntersections :: [Object] -> Ray -> [(Object,Intersection)]
-rayFrontIntersections objects ray = filter isFrontSide  (rayIntersections objects ray)
-  where
-    isFrontSide :: (Object,Intersection) -> Bool
-    isFrontSide (_,(Frontside _ _)) = True
-    isFrontSide (_,(Backside  _ _)) = False
+isFrontside :: (Object,Intersection) -> Bool
+isFrontside (_,(Frontside _ _)) = True
+isFrontside (_,(Backside  _ _)) = False
+
+isBackside :: (Object,Intersection) -> Bool
+isBackside (_,(Frontside _ _)) = False
+isBackside (_,(Backside  _ _)) = True
 
 
-pickObject :: [Object] -> Ray -> Maybe (Object,Intersection)
-pickObject  objects ray =
-  case rayFrontIntersections objects ray of
+pickObject :: [Object] -> Ray -> (Float,Float) -> Maybe (Object,Intersection)
+pickObject  objects ray trange =
+  case filter (isFrontside) $rayIntersectionsWithinRange trange objects ray of
     []  -> Nothing
-    lst -> Just $ minimumWith (\(_,(Frontside _ t)) -> t) lst
+    lst -> Just $ minimumWith gett lst
+
 
 colorMultiply :: Color -> Float -> Color
 colorMultiply (Color r g b) s = Color (multc r) (multc g) (multc b)
   where 
     multc c = limits 0 1 c*s
 
-traceRay :: World -> Ray -> Color
-traceRay world ray = 
-  case pickObject (objects world) ray of
+traceRay :: World -> Ray -> (Float,Float) -> Color
+traceRay world ray trange = 
+  case pickObject (objects world) ray trange of
     Nothing -> backgroundColor world
     Just (object,(Frontside p _)) -> colorMultiply (color object) lightsItensity
       where
         lightsItensity = sum [ intensity | light@(Light _ _ intensity) <- (lights world), not (inShadowOf light)]
 
         inShadowOf :: Light -> Bool
-        inShadowOf (Light lightPos _ _) = length (rayIntersections objects' lightray) > 0
+        inShadowOf (Light lightPos _ _) = not $ isEmpty  $ rayIntersectionsWithinRange (0,distToLight) objects' lightray
           where 
             objects' = objects world
             dir = (lightPos .-. p)
             p0 =  p .+. (dir .* 0.001) --some tolerance to avoid  numerical problems
             lightray = makeRay p0 dir 
+            distToLight = vmagnitude dir
 
           
 --traceRay' :: World -> Ray -> Color
@@ -117,12 +143,14 @@ pixel2World (imWidth,imHeight) i j = toWorld ( toScreen ( toNDC ( toRaster i j) 
 
 makeImage :: Resolution -> World -> [Color]
 makeImage res@(width,height) world = [
-  traceRay world $ castRay $ pixel2World res i j |
+  traceRay world (castRay $ pixel2World res i j ) (near,far) |
     i <- [1..height], 
     j <- [1..width]
   ]
   where
     castRay (a,b,c) = makeRay (Vector3 0 0 0) (Vector3 a b c)
+    near = 0
+    far = 1/0 --infinity
 
 writePPM :: Resolution -> [Color] -> IO ()
 writePPM (width,height) pixels  | width*height /= length pixels = error "Invalid width,height"
@@ -145,7 +173,8 @@ myWorld = World {
     Object (Sphere (Vector3 0 (-30) 20) 20 ) (Color 1 0 0) "sphere2",
     Object (Sphere (Vector3 (-20) 0 20) 5 ) (Color 0 0.8 0.0) "sphere3",
     Object (Sphere (Vector3 0 40 100) 5 ) (Color 0 0.4 0.0) "sphere4",
-    Object (Sphere (Vector3 5 5 50) 5 ) (Color 0.6 0.5 1.0) "sphere5"
+    Object (Sphere (Vector3 5 5 50) 5 ) (Color 0.6 0.5 1.0) "sphere5",
+    Object (Plane  (Vector3 0 1 0) (50) )  (Color 0 0 1) "plane"
   ],
   lights = [
     Light (Vector3 20 100 0) (Color 1 1 1) 0.5,
@@ -155,7 +184,7 @@ myWorld = World {
   backgroundColor = Color 1 1 1
 }
 
-myRes = (500,500)
+myRes = (256,256)
 
 myImage = makeImage myRes myWorld
 
