@@ -7,12 +7,18 @@ data Geometry =
   Sphere Vector3 Float | -- center and radius
   Plane Vector3 Float    -- normal and constant
 
+-- expects p to be at the surface
+getNormalAt :: Geometry -> Vector3 -> Vector3
+getNormalAt (Sphere center _) p  = p .-. center
+getNormalAt (Plane normal _) _   = normal
 
 data Ray = Ray { origin    :: Vector3, direction :: Vector3 } deriving (Show)
 
 data Object = Object {
-  geometry :: Geometry,
-  color :: Color,
+  geometry      :: Geometry,
+  color         :: Color,
+  transparency  :: Float,
+  reflection    :: Float,
   objId :: String
 }
 
@@ -36,6 +42,9 @@ data Intersection = None | Backside Vector3 Float | Frontside Vector3 Float deri
 
 makeRay :: Vector3 -> Vector3 -> Ray
 makeRay o d = Ray o d' where d' = vnormalize d
+
+castRayFromTowards :: Vector3 -> Vector3 -> Ray
+castRayFromTowards a b = makeRay a (b .-. a)
 
 rayPointAt :: Ray -> Float -> Vector3
 rayPointAt (Ray o d) t = o .+. (d .* t)
@@ -99,6 +108,12 @@ isBackside (_,(Backside  _ _)) = True
 
 pickObject :: [Object] -> Ray -> (Float,Float) -> Maybe (Object,Intersection)
 pickObject  objects ray trange =
-  case filter (isFrontside) $rayIntersectionsWithinRange trange objects ray of
+  case filter (isFrontside) $ rayIntersectionsWithinRange trange objects ray of
+    []  -> Nothing
+    lst -> Just $ minimumWith gett lst
+
+pickObjectAllowBackside :: [Object] -> Ray -> (Float,Float) -> Maybe (Object,Intersection)
+pickObjectAllowBackside  objects ray trange =
+  case rayIntersectionsWithinRange trange objects ray of
     []  -> Nothing
     lst -> Just $ minimumWith gett lst
