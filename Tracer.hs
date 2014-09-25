@@ -3,6 +3,7 @@ module Tracer (module Tracer) where
 import Ray
 import Utils
 import Vector
+import Debug.Trace
 
 
 traceRay :: World -> Ray -> (Float,Float) -> Color
@@ -51,14 +52,17 @@ colorMultiply :: Color -> Color -> Color
 colorMultiply (Color 0 0 0) _ = Color 0 0 0 -- improves performance?
 colorMultiply (Color r1 g1 b1) (Color r2 g2 b2) = Color (multc r1 r2) (multc g1 g2) (multc b1 b2)
   where
-    multc x y = limits 0 1 $ x * y
+    --multc x y = limits 0 1 $ x * y
+    multc = (*)
 
 
 colorMultiplyScalar :: Color -> Float -> Color
 colorMultiplyScalar _ 0 = Color 0 0 0     -- improves performance?
 colorMultiplyScalar (Color r g b) s = Color (multc r) (multc g) (multc b)
   where 
-    multc c = limits 0 1 c*s
+    --multc c = limits 0 1 c*s
+    multc = (*s)
+
 
 data TypeRay = EyeRay | ShadowRay | ReflectionRay | RefractionRay
 
@@ -68,35 +72,21 @@ traceRay' _ _ _ EyeRay 0 = Color 1 1 1
 traceRay' world ray trange EyeRay maxdepth =
   case pickObject (objects world) ray trange of
     Nothing                       -> backgroundColor world
-    Just (object, Frontside p _)  -> --colorMultiply (color object) castShadowRays
-        (colorAdd 
-          (colorMultiplyScalar
-            (colorMultiply 
-              (color object) 
-              (if useShadows then castShadowRays else (Color 1 1 1))
-            )
-            drmix
-          )
-          (colorMultiplyScalar 
-            castReflectionRay
-            (1-drmix)
-          )
-        )
-      --mixDSRT (color object) castShadowRays castReflectionRay castRefractionRay (reflection object) (transparency object)
+    Just (object, Frontside p _)  -> colorDiffuse `colorMultiply`  (colorLights `colorAdd` colorReflection `colorAdd` colorRefraction)
 
-  
       where
         useShadows = True
         useReflection = True && (reflection object) > 0
-        useTransmission = False
-        drmix = case (useShadows,useReflection) of (True,True) -> 0.5
-                                                   (True,False) -> 1 
-                                                   (False,True) -> 0
-                                                   (False,False) -> 1
+        --useTransmission = False
+        mix = 0.5
 
-        castShadowRays = foldl1 colorMultiply $ map colorShadowRay (lights world)
-        --TODO FIX light color and intesity 
-        colorShadowRay light@(Light _ lightColor intensity) = colorMultiplyScalar (castShadowRay light) 1
+        colorDiffuse = color object
+
+        colorLights = if useShadows 
+                      then foldl1 colorAdd $ map colorShadowRay (lights world)
+                      else (Color 1 1 1)
+
+        colorShadowRay light@(Light _ lightColor intensity) = colorMultiplyScalar (castShadowRay light) intensity
         castShadowRay (Light lightPos _ _) = traceRay' world shadowray (0,distToLight) ShadowRay (maxdepth -1)
           where
             dir = (lightPos .-. p)
@@ -104,6 +94,7 @@ traceRay' world ray trange EyeRay maxdepth =
             shadowray = makeRay p0 dir 
             distToLight = vmagnitude dir
 
+        colorReflection =  if useReflection then colorMultiplyScalar castReflectionRay mix else (Color 0 0 0)
         castReflectionRay = traceRay' world reflectionray trange ReflectionRay (maxdepth -1)
           where
             n = getNormalAt (geometry object) p 
@@ -113,7 +104,7 @@ traceRay' world ray trange EyeRay maxdepth =
             p0 =  p .+. (dir .* 0.001) --some tolerance to avoid  numerical problems
             reflectionray = makeRay p0 dir 
 
-        castRefractionRay = Color 1 1 1
+        colorRefraction = Color 0 0 0
     
 -- acts as a new eyeray for now
 --traceRay' world ray trange ReflectionRay maxdepth = traceRay' world ray trange EyeRay maxdepth   
@@ -143,8 +134,9 @@ traceRay' world ray trange ShadowRay _ =
   --mix a b ratio = (b*ratio) + (a * (1 - ratio)
 
 colorAdd :: Color -> Color -> Color
-colorAdd (Color 1 1 1) _ = Color 1 1 1
-colorAdd _ (Color 1 1 1) = Color 1 1 1
+--colorAdd (Color 1 1 1) _ = Color 1 1 1
+--colorAdd _ (Color 1 1 1) = Color 1 1 1
 colorAdd (Color r1 g1 b1) (Color r2 g2 b2) = Color (addc r1 r2) (addc g1 g2) (addc b1 b2)
   where
-    addc x y = limits 0 1 $ x + y
+    --addc x y = limits 0 1 $ x + y
+    addc = (+)

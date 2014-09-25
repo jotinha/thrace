@@ -3,6 +3,7 @@ module Ray (module Ray) where
 import Vector
 import Utils
 
+
 data Geometry = 
   Sphere Vector3 Float | -- center and radius
   Plane Vector3 Float    -- normal and constant

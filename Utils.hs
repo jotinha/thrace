@@ -1,6 +1,7 @@
 module Utils (module Utils) where
 
 import GHC.Exts (sortWith)
+import qualified Debug.Trace
 
 minimumWith :: Ord b => (a -> b) -> [a] -> a
 minimumWith f xs = head $ sortWith f xs
@@ -23,3 +24,5 @@ isNothing (Just _) = False
 
 isSomething :: Maybe a -> Bool
 isSomething = not . isNothing
+
+debug = flip Debug.Trace.trace
