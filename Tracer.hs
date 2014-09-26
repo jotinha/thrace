@@ -75,9 +75,9 @@ traceRay' world ray trange EyeRay maxdepth =
     Just (object, Frontside p _)  -> colorDiffuse `colorMultiply`  (colorLights `colorAdd` colorReflection `colorAdd` colorRefraction)
 
       where
-        useShadows = True
-        useReflection = True && (reflection object) > 0
-        --useTransmission = False
+        useShadows = False
+        useReflection = False && (reflection object) > 0
+        useRefraction = True
         mix = 0.5
 
         colorDiffuse = color object
@@ -86,7 +86,9 @@ traceRay' world ray trange EyeRay maxdepth =
                       then foldl1 colorAdd $ map colorShadowRay (lights world)
                       else (Color 1 1 1)
 
-        colorShadowRay light@(Light _ lightColor intensity) = colorMultiplyScalar (castShadowRay light) intensity
+        -- TODO: implement color intensity, think about it, don't just multiply scalar, that only fades the shadow...
+        -- TODO: implement light colors
+        colorShadowRay light@(Light _ lightColor intensity) = colorMultiplyScalar (castShadowRay light) 1
         castShadowRay (Light lightPos _ _) = traceRay' world shadowray (0,distToLight) ShadowRay (maxdepth -1)
           where
             dir = (lightPos .-. p)
@@ -104,34 +106,31 @@ traceRay' world ray trange EyeRay maxdepth =
             p0 =  p .+. (dir .* 0.001) --some tolerance to avoid  numerical problems
             reflectionray = makeRay p0 dir 
 
-        colorRefraction = Color 0 0 0
-    
--- acts as a new eyeray for now
---traceRay' world ray trange ReflectionRay maxdepth = traceRay' world ray trange EyeRay maxdepth   
-traceRay' world ray trange ReflectionRay maxdepth =
-  case pickObject (objects world) ray trange of 
-    Nothing -> Color 1 1 1
-    Just (object, Frontside p _) -> color object
+        colorRefraction = if useRefraction then castRefractionRay else (Color 0 0 0)
+        castRefractionRay = traceRay' world refractionray trange RefractionRay (maxdepth -1)
+          where 
+            -- https://en.wikipedia.org/w/index.php?title=Snell%27s_law&oldid=621864417
+            n = getNormalAt (geometry object) p 
+            d = (\(Ray _ d) -> d) ray 
+            c = - (d `vdot` n)
+            r = 1/1.33 --n_air/n_medium
+            dir = (r *. d) .+. (n .* (r*c - sqrt ( 1 - (r*r*(1-c*c)))))
 
+            p0 =  p .+. (dir .* 0.001) --some tolerance to avoid  numerical problems
+            refractionray = makeRay p0 dir
+
+-- acts as a new eyeray for now
+--TODO implement so it doesn't reflect the backgroundColor
+traceRay' world ray trange ReflectionRay maxdepth = traceRay' world ray trange EyeRay maxdepth   
+
+-- TODO: should we not spawn an internal reflection ray?
+traceRay' world ray trange RefractionRay maxdepth = traceRay' world ray trange EyeRay maxdepth
 
 traceRay' world ray trange ShadowRay _ =
   case pickObjectAllowBackside (objects world) ray trange of 
     Nothing -> Color 1 1 1 -- if shadow ray does not intersect, return identity
     _       -> Color 0 0 0 -- if shadow ray intersects either front or back, return null (shadow)
 
--- mix diffuse, shadow, reflection and transmission colors
---mixDSRT :: Color -> Color -> Color -> Color -> Float -> Float -> Color
---mixDSRT diffuseColor shadowColor reflectionColor transmissionColor reflectionAmount transparency = 
---  colorMultiply
-
---where
---  color1 = colorMultiply diffuseColor shadowColor
---  color2 = colorMultiplyScalar reflectionColor reflectionAmount
---  color3 = colorMultiplyScalar transmissionColor transparency
---  colorRT = colorAdd color2 color3
---  --facingratio = -ndotd
-  --fresneleffect = mix ((1 - facingratio) ^ 3) 1 0.1
-  --mix a b ratio = (b*ratio) + (a * (1 - ratio)
 
 colorAdd :: Color -> Color -> Color
 --colorAdd (Color 1 1 1) _ = Color 1 1 1

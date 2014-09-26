@@ -45,12 +45,13 @@ writePPM (width,height) pixels  | width*height /= length pixels = error "Invalid
 
 myWorld = World {
   objects = [
-    Object (Sphere (Vector3 0    0  20) 5 ) (Color 0.2 0.2 0.8) 0 1 "sphere1",
-    Object (Sphere (Vector3 0 (-30) 20) 20 ) (Color 1 0 0) 0 1 "sphere2",
-    Object (Sphere (Vector3 (-20) 0 20) 5 ) (Color 0 0.8 0.0) 0 1 "sphere3",
-    Object (Sphere (Vector3 0 40 100) 5 ) (Color 0 0.4 0.0) 0 1 "sphere4",
-    Object (Sphere (Vector3 8 8 25 ) 5 ) (Color 0.6 0.5 1.0) 0 1 "sphere5",
-    Object (Plane  (Vector3 0 1 0) (7) )  (Color 0.95 0.95 0.8) 0 1 "plane"
+    Object (Sphere (Vector3 0 0  20) 5 ) (Color 0.2 0.2 0.8) 0 0 "sphere1",
+    Object (Sphere (Vector3 0 5  30) 5 ) (Color 0.8 0.2 0.8) 0 0 "sphere1b"
+    --Object (Sphere (Vector3 0 (-30) 20) 20 ) (Color 1 0 0) 0 1 "sphere2",
+    --Object (Sphere (Vector3 (-20) 0 20) 5 ) (Color 0 0.8 0.0) 0 1 "sphere3",
+    --Object (Sphere (Vector3 0 40 100) 5 ) (Color 0 0.4 0.0) 0 1 "sphere4",
+    --Object (Sphere (Vector3 8 8 25 ) 5 ) (Color 0.6 0.5 1.0) 0 1 "sphere5",
+    --Object (Plane  (Vector3 0 1 0) (7) )  (Color 0.95 0.95 0.8) 0 0 "plane"
   ],
   lights = [
     Light (Vector3 20 100 0) (Color 1 1 1) 0.5
@@ -60,7 +61,7 @@ myWorld = World {
   backgroundColor = Color 1 1 1
 }
 
-myRes = (500,500)
+myRes = (1024,1024)
 
 myImage = makeImage myRes myWorld
 
