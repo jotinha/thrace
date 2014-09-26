@@ -4,6 +4,7 @@ import Ray
 import Utils
 import Vector
 import Debug.Trace
+import qualified Physics
 
 
 traceRay :: World -> Ray -> (Float,Float) -> Color
@@ -68,62 +69,73 @@ data TypeRay = EyeRay | ShadowRay | ReflectionRay | RefractionRay
 
 traceRay' :: World -> Ray -> (Float,Float) -> TypeRay -> Float -> Color
 
-traceRay' _ _ _ EyeRay 0 = Color 1 1 1
+traceRay' _ _ _ EyeRay 0 = Color 0 0 0
 traceRay' world ray trange EyeRay maxdepth =
   case pickObject (objects world) ray trange of
     Nothing                       -> backgroundColor world
-    Just (object, Frontside p _)  -> colorDiffuse `colorMultiply`  (colorLights `colorAdd` colorReflection `colorAdd` colorRefraction)
+    Just (object, Frontside p _)  -> 
+      (color object) `colorMultiply`  (colorLights `colorAdd` colorReflection `colorAdd` colorRefraction)
 
       where
-        useShadows = False
+        useShadows = True
         useReflection = False && (reflection object) > 0
         useRefraction = True
-        mix = 0.5
-
-        colorDiffuse = color object
-
-        colorLights = if useShadows 
-                      then foldl1 colorAdd $ map colorShadowRay (lights world)
-                      else (Color 1 1 1)
+        mix' = 0.5
+      
+        -- Cast shadow rays ------------------------------------------------------------------------
+        -- TODO: implement light colors
+        colorLights         = colorMultiplyScalar colorLights' 1
+        colorLights'        = if useShadows
+                              then foldl1 colorAdd $ map colorOneLight (lights world)
+                              else (Color 1 1 1)
 
         -- TODO: implement color intensity, think about it, don't just multiply scalar, that only fades the shadow...
-        -- TODO: implement light colors
-        colorShadowRay light@(Light _ lightColor intensity) = colorMultiplyScalar (castShadowRay light) 1
-        castShadowRay (Light lightPos _ _) = traceRay' world shadowray (0,distToLight) ShadowRay (maxdepth -1)
+        --colorOneLight       = colorMultiplyScalar (castShadowRay light) 1
+        colorOneLight (Light lightPos _ _) = traceRay' world (spawnRay lightDir) (0,distToLight) ShadowRay (maxdepth -1)
           where
-            dir = (lightPos .-. p)
-            p0 =  p .+. (dir .* 0.001) --some tolerance to avoid  numerical problems
-            shadowray = makeRay p0 dir 
-            distToLight = vmagnitude dir
+            lightDir = (lightPos .-. p)
+            distToLight = vmagnitude lightDir
 
-        colorReflection =  if useReflection then colorMultiplyScalar castReflectionRay mix else (Color 0 0 0)
-        castReflectionRay = traceRay' world reflectionray trange ReflectionRay (maxdepth -1)
-          where
-            n = getNormalAt (geometry object) p 
-            d = (\(Ray _ d) -> d) ray
-            dir = d .-. ((2 * (n `vdot` d)) *. n)  --reflection direction. n must be normalized 
-                                                   -- n dot d should be negative (guaranteed by frontside ?)
-            p0 =  p .+. (dir .* 0.001) --some tolerance to avoid  numerical problems
-            reflectionray = makeRay p0 dir 
 
-        colorRefraction = if useRefraction then castRefractionRay else (Color 0 0 0)
-        castRefractionRay = traceRay' world refractionray trange RefractionRay (maxdepth -1)
-          where 
-            -- https://en.wikipedia.org/w/index.php?title=Snell%27s_law&oldid=621864417
-            n = getNormalAt (geometry object) p 
-            d = (\(Ray _ d) -> d) ray 
-            c = - (d `vdot` n)
-            r = 1/1.33 --n_air/n_medium
-            dir = (r *. d) .+. (n .* (r*c - sqrt ( 1 - (r*r*(1-c*c)))))
+        -- Cast reflection ray ------------------------------------------------------------------------
+        colorReflection   = colorMultiplyScalar colorReflection' mix 
+        colorReflection'  = if useReflection 
+                            then traceRay' world (spawnRay reflectionvector) trange ReflectionRay (maxdepth -1)
+                            else (Color 0 0 0)
 
-            p0 =  p .+. (dir .* 0.001) --some tolerance to avoid  numerical problems
-            refractionray = makeRay p0 dir
+        
+
+        -- Cast refraction ray ------------------------------------------------------------------------
+        colorRefraction   = colorMultiplyScalar colorRefraction' (1-mix)
+        colorRefraction'  = if useRefraction 
+                            then traceRay' world (spawnRay refractionvector) trange RefractionRay (maxdepth -1)
+                            else Color 0 0 0
+
+
+        -- common ------------------------------------------------------------------------------------
+        incidentDir = (\(Ray _ d) -> d) ray
+        surfNormal = getNormalAt (geometry object) p -- what if it's inside ??
+        (reflectionvector, refractionvector) = Physics.getReflectionRefractionVectors 
+                                              incidentDir surfNormal 1.0 1.33
+
+        spawnRay dir = makeRay p0 dir 
+          where p0 =  p .+. (dir .* 0.01) --some tolerance to avoid  numerical problems
+                                          -- maybe use surfNormal * 0.01 ? What if it's inside?
+
+        -- reflection - refraction mix (TODO: use fresnel equations)
+        mix = case (useReflection,useRefraction) of (True,False)  -> 0
+                                                    (False,False) -> 1
+                                                    _ -> mix'
+        
+
 
 -- acts as a new eyeray for now
 --TODO implement so it doesn't reflect the backgroundColor
 traceRay' world ray trange ReflectionRay maxdepth = traceRay' world ray trange EyeRay maxdepth   
 
 -- TODO: should we not spawn an internal reflection ray?
+-- TODO: implement this! Right now a refraction ray does nothing when it hits the backsurface,
+-- since pickObject fails
 traceRay' world ray trange RefractionRay maxdepth = traceRay' world ray trange EyeRay maxdepth
 
 traceRay' world ray trange ShadowRay _ =
@@ -139,3 +151,29 @@ colorAdd (Color r1 g1 b1) (Color r2 g2 b2) = Color (addc r1 r2) (addc g1 g2) (ad
   where
     --addc x y = limits 0 1 $ x + y
     addc = (+)
+
+--------------------------------------------------------
+-- ALTERNATIVE --
+--------------------------------------------------------
+
+--traceRay'' :: World -> Ray -> (Float,Float) -> Float -> Color
+--traceRay'' world firstray trange' maxdepth' = traceRayHere world firstray trange' EyeRay maxdepth'
+  
+--  where
+
+--    traceRayHere :: Ray -> (Float,Float) -> TypeRay -> Float -> Color
+    
+--    traceRayHere ray trange typeray maxdepth | maxdepth <= 0 = black
+--                                             | isNothing intersection = backgroundColor world
+--                                             | otherwise 
+
+
+
+--    black = Color 0 0 0
+--    white = Color 1 1 1
+
+--    makeRefractionRay :: Vector3 -> Vector3 -> Vector3 -> Float -> Vector3
+--    makeRefractionRay p n d r = (r *. d) .+. (n .* (r*c - sqrt ( 1 - (r*r*(1-c*c)))))
+--      where c = - (d `vdot` n)
+            
+--    makeReflectionRay
