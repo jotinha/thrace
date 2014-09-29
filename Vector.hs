@@ -60,6 +60,7 @@ class Vector a where
   vnormalize v = v ./ (vmagnitude v)
 
 
+
 instance Vector Vector2 where
   (Vector2 x1 y1) .+. (Vector2 x2 y2) = Vector2 (x1 + x2) (y1 + y2)
   (Vector2 x1 y1) .-. (Vector2 x2 y2) = Vector2 (x1 - x2) (y1 - y2)
@@ -78,6 +79,7 @@ instance Vector Vector3 where
   vnegate (Vector3 x y z) = Vector3 (-x) (-y) (-z)
   vfill s = Vector3 s s s
 
+
 instance Vector Vector4 where
   (Vector4 x1 y1 z1 w1) .+. (Vector4 x2 y2 z2 w2) = Vector4 (x1 + x2) (y1 + y2) (z1 + z2) (w1 + w2)
   (Vector4 x1 y1 z1 w1) .-. (Vector4 x2 y2 z2 w2) = Vector4 (x1 - x2) (y1 - y2) (z1 - z2) (w1 - w2)
@@ -86,3 +88,10 @@ instance Vector Vector4 where
   vdot (Vector4 x1 y1 z1 w1) (Vector4 x2 y2 z2 w2) = x1*x2 + y1*y2 + z1*z2 + w1*w2
   vnegate (Vector4 x y z w) = Vector4 (-x) (-y) (-z) (-w)
   vfill s = Vector4 s s s s
+
+vcross :: Vector3 -> Vector3 -> Vector3
+(Vector3 x1 y1 z1) `vcross` (Vector3 x2 y2 z2) = Vector3 s1 s2 s3
+  where
+    s1 = y1*z2 - y2*z1
+    s2 = x2*z1 - x1*z2
+    s3 = x1*y2 - y1*x2
