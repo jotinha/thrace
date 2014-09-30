@@ -93,25 +93,48 @@ rayIntersect ray@(Ray o d) (Triangle p0 p1 p2)  | a > -tol && a < tol = None  --
     p = barycentric2world p0 p1 p2 (Vector2 u v)
     tol = 0.001
 
-
--- Ray - AABox intersection
-rayIntersect ray@(Ray o d) box@(AABox bmin bmax) 
-  | t0x > t1y || t0x > t1z || t0y > t1x || t0y > t1z ||t0z > t1x || t0z > t1z = None
+rayIntersect ray@(Ray o d) (AABox bmin bmax) 
+  | txmin > tymax || txmax < tymin = None
+  | tmin' > tzmax || tmax' < tzmin = None
+  | tmax < 0 = None
   | tmin < 0 && tmax < 0  = error "both tmin and tmax are negative"
-  | tmin > tmax  = error "tmin > tmax"
+  | tmin > tmax  = error "tmin > tmax" --`debug` (show (a,b))
   | tmin < 0   = Backside  (rayPointAt ray tmax) tmax
   | otherwise  = Frontside (rayPointAt ray tmin) tmin
+
 
   where
     bound1 = vvvApply (\a b c -> if 1/a >= 0 then b else c) d bmin bmax
     bound2 = vvvApply (\a b c -> if 1/a >= 0 then b else c) d bmax bmin
-    (Vector3 t0x t0y t0z)  = (bound1 .-. o) ./. d
-    (Vector3 t1x t1y t1z)  = (bound2 .-. o) ./. d
-    tmin = maximum [t0x,t0y,t0z]
-    tmax = minimum [t1x,t1y,t1z]
-    
+    a@(Vector3 txmin tymin tzmin) = (bound1 .-. o) ./. d
+    b@(Vector3 txmax tymax tzmax) = (bound2 .-. o) ./. d
+    tmin' = max txmin tymin
+    tmax' = min txmax tymax
+    tmin = max tmin' tzmin
+    tmax = min tmax' tzmax
+
     vvvApply :: (Float -> Float -> Float -> Float) -> Vector3 -> Vector3 -> Vector3 -> Vector3
     vvvApply f (Vector3 x1 y1 z1) (Vector3 x2 y2 z2) (Vector3 x3 y3 z3) = Vector3 (f x1 x2 x3) (f y1 y2 y3) (f z1 z2 z3)
+
+
+-- Ray - AABox intersection
+--rayIntersect ray@(Ray o d) (AABox bmin bmax) 
+--  | t0x > t1y || t0x > t1z || t0y > t1x || t0y > t1z ||t0z > t1x || t0z > t1z = None
+--  | tmin < 0 && tmax < 0  = error "both tmin and tmax are negative"
+--  | tmin > tmax  = error "tmin > tmax" `debug` (show (bound1,bound2))
+--  | tmin < 0   = Backside  (rayPointAt ray tmax) tmax
+--  | otherwise  = Frontside (rayPointAt ray tmin) tmin
+
+--  where
+--    bound1 = vvvApply (\a b c -> if 1/a >= 0 then b else c) d bmin bmax
+--    bound2 = vvvApply (\a b c -> if 1/a >= 0 then b else c) d bmax bmin
+--    (Vector3 t0x t0y t0z)  = (bound1 .-. o) ./. d
+--    (Vector3 t1x t1y t1z)  = (bound2 .-. o) ./. d
+--    tmin = maximum [t0x,t0y,t0z]
+--    tmax = minimum [t1x,t1y,t1z]
+    
+--    vvvApply :: (Float -> Float -> Float -> Float) -> Vector3 -> Vector3 -> Vector3 -> Vector3
+--    vvvApply f (Vector3 x1 y1 z1) (Vector3 x2 y2 z2) (Vector3 x3 y3 z3) = Vector3 (f x1 x2 x3) (f y1 y2 y3) (f z1 z2 z3)
 
 
 

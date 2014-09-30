@@ -16,8 +16,8 @@ traceRay world ray trange maxdepth
   where
 
     useShadows = True
-    useReflection = True
-    useRefraction = True
+    useReflection = False
+    useRefraction = False
 
     black   = Color 0 0 0
     white   = Color 1 1 1
@@ -77,7 +77,7 @@ traceRay world ray trange maxdepth
             True  -> Physics.getReflectionRefractionVectors incidentDir (vnegate surfNormal) n2 n1
 
     spawnRay dir = makeRay p0 dir 
-      where p0 =  p .+. (dir .* 0.01) --some tolerance to avoid  numerical problems
+      where p0 =  p .+. (dir .* 0.0001) --some tolerance to avoid  numerical problems
                                       -- maybe use surfNormal * 0.01 ? What if it's inside?
 
 
