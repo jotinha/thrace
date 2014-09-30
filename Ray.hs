@@ -15,6 +15,10 @@ getNormalAt (Sphere center _) p   = p .-. center
 getNormalAt (Plane normal _) _    = normal
 getNormalAt (Triangle p0 p1 p2) _ = vnormalize $ (p1 .-. p0) `vcross` (p2 .-. p0)
 
+isGeometryOpen :: Geometry -> Bool
+isGeometryOpen (Triangle _ _ _) = True
+isGeometryOpen _        = False
+
 data Ray = Ray { origin    :: Vector3, direction :: Vector3 } deriving (Show)
 
 data Object = Object {
@@ -41,7 +45,7 @@ data Light = Light Vector3 Color Float --position color intensity
 
 type Resolution = (Int, Int)
 
-data Intersection = None | Backside Vector3 Float | Frontside Vector3 Float deriving (Eq)
+data Intersection = None | Backside Vector3 Float | Frontside Vector3 Float deriving (Eq,Show)
 
 makeRay :: Vector3 -> Vector3 -> Ray
 makeRay o d = Ray o d' where d' = vnormalize d
@@ -53,6 +57,8 @@ rayPointAt :: Ray -> Float -> Vector3
 rayPointAt (Ray o d) t = o .+. (d .* t)
 
 rayIntersect :: Ray -> Geometry -> Intersection
+
+
 
 --Ray - Sphere intersection
 rayIntersect ray@(Ray o d) (Sphere c r)   | s < 0 && l2 > r2  = None
@@ -123,6 +129,10 @@ rayIntersectionsWithinRange (tmin,tmax) objs ray = (filter (withinRange tmin tma
 gett :: (Object,Intersection) -> Float
 gett (_,(Frontside _ t)) = t
 gett (_,(Backside _ t))  = t
+
+getp :: (Object,Intersection) -> Vector3
+getp (_,(Frontside p _)) = p
+getp (_,(Backside p _))  = p
 
 isFrontside :: (Object,Intersection) -> Bool
 isFrontside (_,(Frontside _ _)) = True
