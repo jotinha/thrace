@@ -16,8 +16,8 @@ traceRay world ray trange maxdepth
   where
 
     useShadows = True
-    useReflection = False
-    useRefraction = False
+    useReflection = True
+    useRefraction = True
 
     black   = Color 0 0 0
     white   = Color 1 1 1
@@ -33,17 +33,17 @@ traceRay world ray trange maxdepth
     colorDiffuse = (color object)
 
     -- Cast shadow rays ------------------------------------------------------------------------
-    colorShadow  = if useShadows then colorShadow' else black
+    colorShadow  = if useShadows then colorShadow' else white
     colorShadow' = colorMultiplyScalar (foldl1 colorAdd $ map colorOne (lights world)) 1
       where 
         colorOne :: Light -> Color
-        colorOne (Light lightPos _ _) | isNothing intersection = white
+        colorOne (Light lightPos _ _) | isNothing shadowIntersection = white
                                       | otherwise              = black
           where
             lightDir = (lightPos .-. p)
             shadowRay = spawnRay lightDir
             distToLight = vmagnitude lightDir
-            intersection = pickObjectAllowBackside (objects world) shadowRay (0,distToLight)
+            shadowIntersection = pickObjectAllowBackside (objects world) shadowRay (0,distToLight)
 
     -- Cast reflection ray ------------------------------------------------------------------------
     colorReflection   = if useReflection 
@@ -61,23 +61,22 @@ traceRay world ray trange maxdepth
     -- (TODO: use fresnel equations)
     mix = case (useReflection,useRefraction) of (True,False)  -> 0
                                                 (False,False) -> 1
+                                                (False,True) -> 1
                                                 _ -> 0.5
 
 
     -- common ------------------------------------------------------------------------------------
+    incidentDir = (\(Ray _ d) -> d) ray
     surfNormal = getNormalAt (geometry object) p -- what if it's inside ??
-    (reflectionvector, refractionvector) = Physics.getReflectionRefractionVectors 
-                                          incidentDir surfNormal 1.0 1.33
-      where
-        incidentDir = (\(Ray _ d) -> d) ray
-        surfNormal = getNormalAt (geometry object) p -- what if it's inside ??
-        (n1,n2) = (1.0, 1.33)
-        (reflectionvector, refractionvector) = case isInside of
-            False -> Physics.getReflectionRefractionVectors incidentDir surfNormal n1 n2
-            True  -> Physics.getReflectionRefractionVectors incidentDir (vnegate surfNormal) n2 n1
+    (n1,n2) = (1.0, 1.33)
+    (reflectionvector, refractionvector) = case isInside of
+        False -> Physics.getReflectionRefractionVectors incidentDir surfNormal n1 n2
+        True  -> Physics.getReflectionRefractionVectors incidentDir (vnegate surfNormal) n2 n1
 
-    spawnRay dir = makeRay p0 dir 
-      where p0 =  p .+. (dir .* 0.0001) --some tolerance to avoid  numerical problems
+    spawnRay dir = Ray p0 dir'
+      where 
+        dir' = vnormalize dir
+        p0 =  p .+. (dir' .* 0.001) --some tolerance to avoid  numerical problems
                                       -- maybe use surfNormal * 0.01 ? What if it's inside?
 
 
@@ -97,8 +96,7 @@ colorMultiplyScalar (Color r g b) s = Color (multc r) (multc g) (multc b)
     multc = (*s)
 
 colorAdd :: Color -> Color -> Color
---colorAdd (Color 1 1 1) _ = Color 1 1 1
---colorAdd _ (Color 1 1 1) = Color 1 1 1
+-- colorAdd _ (Color 1 1 1) = Color 1 1 1
 colorAdd (Color r1 g1 b1) (Color r2 g2 b2) = Color (addc r1 r2) (addc g1 g2) (addc b1 b2)
   where
     --addc x y = limits 0 1 $ x + y
