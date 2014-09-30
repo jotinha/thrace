@@ -3,6 +3,7 @@ import qualified Data.ByteString.Char8 as BC
 import Tracer
 import Vector
 import Ray
+import Geometry
 import Debug.Trace
 
 pixel2World :: Resolution -> Int -> Int -> (Float,Float,Float)
@@ -70,3 +71,5 @@ myImage = makeImage myRes myWorld
 main = writePPM myRes myImage
 --tri = (Triangle (Vector3 0 0 20) (Vector3 (-10) 0 20) (Vector3 (-10) 10 20)) 
 --main = print $ rayIntersect (makeRay (Vector3 0 0 0) (Vector3 (-5) 5 20)) tri
+--box = AABox (Vector3 (0) (9) (0)) (Vector3 1 10 1)
+--main = print $ rayIntersect (makeRay (Vector3 0 0 0) (Vector3 (-0) 1 (-0))) box

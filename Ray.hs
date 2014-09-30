@@ -2,22 +2,7 @@ module Ray (module Ray) where
 
 import Vector
 import Utils
-
-
-data Geometry = 
-  Sphere Vector3 Float |  -- center and radius
-  Plane Vector3 Float  |  -- normal and constant
-  Triangle Vector3 Vector3 Vector3
-
--- expects p to be at the surface
-getNormalAt :: Geometry -> Vector3 -> Vector3
-getNormalAt (Sphere center _) p   = p .-. center
-getNormalAt (Plane normal _) _    = normal
-getNormalAt (Triangle p0 p1 p2) _ = vnormalize $ (p1 .-. p0) `vcross` (p2 .-. p0)
-
-isGeometryOpen :: Geometry -> Bool
-isGeometryOpen (Triangle _ _ _) = True
-isGeometryOpen _        = False
+import Geometry
 
 data Ray = Ray { origin    :: Vector3, direction :: Vector3 } deriving (Show)
 
@@ -31,7 +16,6 @@ data Object = Object {
 
 instance Eq Object where
   a == b = (objId a) == (objId b)
-
 
 data Color = Color Float Float Float deriving (Show)
 
@@ -57,8 +41,6 @@ rayPointAt :: Ray -> Float -> Vector3
 rayPointAt (Ray o d) t = o .+. (d .* t)
 
 rayIntersect :: Ray -> Geometry -> Intersection
-
-
 
 --Ray - Sphere intersection
 rayIntersect ray@(Ray o d) (Sphere c r)   | s < 0 && l2 > r2  = None
@@ -112,6 +94,25 @@ rayIntersect ray@(Ray o d) (Triangle p0 p1 p2)  | a > -tol && a < tol = None  --
     tol = 0.001
 
 
+-- Ray - AABox intersection
+rayIntersect ray@(Ray o d) box@(AABox bmin bmax) 
+  | t0x > t1y || t0x > t1z || t0y > t1x || t0y > t1z ||t0z > t1x || t0z > t1z = None
+  | tmin < 0 && tmax < 0  = error "both tmin and tmax are negative"
+  | tmin > tmax  = error "tmin > tmax"
+  | tmin < 0   = Backside  (rayPointAt ray tmax) tmax
+  | otherwise  = Frontside (rayPointAt ray tmin) tmin
+
+  where
+    bound1 = vvvApply (\a b c -> if 1/a >= 0 then b else c) d bmin bmax
+    bound2 = vvvApply (\a b c -> if 1/a >= 0 then b else c) d bmax bmin
+    (Vector3 t0x t0y t0z)  = (bound1 .-. o) ./. d
+    (Vector3 t1x t1y t1z)  = (bound2 .-. o) ./. d
+    tmin = maximum [t0x,t0y,t0z]
+    tmax = minimum [t1x,t1y,t1z]
+    
+    vvvApply :: (Float -> Float -> Float -> Float) -> Vector3 -> Vector3 -> Vector3 -> Vector3
+    vvvApply f (Vector3 x1 y1 z1) (Vector3 x2 y2 z2) (Vector3 x3 y3 z3) = Vector3 (f x1 x2 x3) (f y1 y2 y3) (f z1 z2 z3)
+
 
 
 rayIntersections :: [Object] -> Ray -> [(Object,Intersection)]
@@ -154,10 +155,3 @@ pickObjectAllowBackside  objects ray trange =
   case rayIntersectionsWithinRange trange objects ray of
     []  -> Nothing
     lst -> Just $ minimumWith gett lst
-
--- convert barycentric coordinates u,v of a triangle to x,y,z
-barycentric2world :: Vector3 -> Vector3 -> Vector3 -> Vector2 -> Vector3
-barycentric2world p0 p1 p2 (Vector2 u v) =  (w *. p0) .+. (u *. p1) .+. (v *. p2)
-  where w = (1 - u - v)
-
-                                                      

@@ -3,6 +3,7 @@ module Tracer (module Tracer) where
 import Ray
 import Utils
 import Vector
+import Geometry
 import Debug.Trace
 import qualified Physics
 
