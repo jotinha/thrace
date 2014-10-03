@@ -26,3 +26,6 @@ isSomething :: Maybe a -> Bool
 isSomething = not . isNothing
 
 debug = flip Debug.Trace.trace
+
+-- clamped cosine
+ccos = (max 0) . cos

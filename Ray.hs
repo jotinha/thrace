@@ -9,8 +9,8 @@ data Ray = Ray { origin    :: Vector3, direction :: Vector3 } deriving (Show)
 data Object = Object {
   geometry      :: Geometry,
   color         :: Color,
-  transparency  :: Float,
   reflection    :: Float,
+  transparency  :: Float,
   objId :: String
 }
 

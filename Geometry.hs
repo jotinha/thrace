@@ -12,11 +12,10 @@ data Geometry =
 
 -- expects p to be at the surface
 getNormalAt :: Geometry -> Vector3 -> Vector3
-getNormalAt (Sphere center _) p   = p .-. center
+getNormalAt (Sphere center _) p   = vnormalize $ p .-. center
 getNormalAt (Plane normal _) _    = normal
 getNormalAt (Triangle p0 p1 p2) _ = vnormalize $ (p1 .-. p0) `vcross` (p2 .-. p0)
 
---expect p to be at or slightly above surface
 getNormalAt (AABox (Vector3 minx miny minz) (Vector3 maxx maxy maxz)) (Vector3 px py pz)
   | px <= minx + tol = Vector3 (-1) 0 0
   | px >= maxx - tol = Vector3 1 0 0
