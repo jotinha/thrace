@@ -17,7 +17,7 @@ traceRay world ray trange maxdepth
 
   where
 
-    useShading = False
+    useShading = True
     useShadows = False
     useReflection = True
     useRefraction = True

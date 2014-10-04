@@ -62,6 +62,9 @@ class Vector a where
   (./.) :: a -> a -> a
   (./.) = vvapply (/)
 
+  (.*.) :: a -> a -> a
+  (.*.) = vvapply (*)
+
   vmagnitude :: a -> Float
   vmagnitude v = sqrt $ vdot v v
 

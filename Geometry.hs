@@ -7,7 +7,9 @@ data Geometry =
   Sphere Vector3 Float |  -- center and radius
   Plane Vector3 Float  |  -- normal and constant
   Triangle Vector3 Vector3 Vector3 |
-  AABox Vector3 Vector3  --axis aligned bounding box with min and max points
+  AABox Vector3 Vector3  | --axis aligned bounding box with min and max points
+  UnitCylinder Vector3     -- infinite cylinder with radius 1 with main axis in y direction at given position
+
 
 
 -- expects p to be at the surface
@@ -15,6 +17,7 @@ getNormalAt :: Geometry -> Vector3 -> Vector3
 getNormalAt (Sphere center _) p   = vnormalize $ p .-. center
 getNormalAt (Plane normal _) _    = normal
 getNormalAt (Triangle p0 p1 p2) _ = vnormalize $ (p1 .-. p0) `vcross` (p2 .-. p0)
+getNormalAt (UnitCylinder cc) p   = vnormalize $ (p .-. cc) .*. (Vector3 1 0 1) --this discards the y coordinate
 
 getNormalAt (AABox (Vector3 minx miny minz) (Vector3 maxx maxy maxz)) (Vector3 px py pz)
   | px <= minx + tol = Vector3 (-1) 0 0

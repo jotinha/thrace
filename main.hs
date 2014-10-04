@@ -57,12 +57,13 @@ myWorld = World {
     --Object (Plane  (Vector3 0 1 0) (6) )  (Color 1 1 1) 1 0 "plane"
     --Object (Triangle (Vector3 0 0 (-20)) (Vector3 (10) 0 (-20)) (Vector3 (10) (10) (-20))) 
            --(Color 0.5 0.1 0.1) 0 0 "tri1"
-    Object (makeAABoxFromPoints [Vector3 (2) (-5) (-30), Vector3 (10) 5 (-25)]) (Color 0 1 0) 1 0 "box",
-      --Object (Sphere (Vector3 0 (-10004) (-30)) 10000) (Color 0.2 0.2 0.2) 0 0 "c1",
-      Object (Sphere (Vector3 0 0 (-20)) 4) (Color 1 0.32 0.36) 1 1 "c2",
-      Object (Sphere (Vector3 5 (-1) (-15)) 2) (Color 0.90 0.76 0.46) 1 0.0 "c3",
-      Object (Sphere (Vector3 5 (0) (-25)) 3) (Color 0.65 0.77 0.97) 1 0.0 "c4",
-      Object (Sphere (Vector3 (-5.5) (0) (-15)) 3) (Color 0.90 0.90 0.90) 1 0.0 "c5"
+    --Object (makeAABoxFromPoints [Vector3 (2) (-5) (-30), Vector3 (10) 5 (-25)]) (Color 0 1 0) 1 0 "box",
+    --  --Object (Sphere (Vector3 0 (-10004) (-30)) 10000) (Color 0.2 0.2 0.2) 0 0 "c1",
+    --  Object (Sphere (Vector3 0 0 (-20)) 4) (Color 1 0.32 0.36) 1 1 "c2",
+    --  Object (Sphere (Vector3 5 (-1) (-15)) 2) (Color 0.90 0.76 0.46) 1 0.0 "c3",
+    --  Object (Sphere (Vector3 5 (0) (-25)) 3) (Color 0.65 0.77 0.97) 1 0.0 "c4",
+    --  Object (Sphere (Vector3 (-5.5) (0) (-15)) 3) (Color 0.90 0.90 0.90) 1 0.0 "c5",
+      Object (UnitCylinder (Vector3 0 0 (-40))) (Color 1 0 0) 0 0 "cyl"
   ],
   lights = [
     --Light (Vector3 20 100 0) (Color 1 1 1) 0.5

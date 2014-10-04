@@ -136,6 +136,21 @@ rayIntersect ray@(Ray o d) (AABox bmin bmax)
 --    vvvApply :: (Float -> Float -> Float -> Float) -> Vector3 -> Vector3 -> Vector3 -> Vector3
 --    vvvApply f (Vector3 x1 y1 z1) (Vector3 x2 y2 z2) (Vector3 x3 y3 z3) = Vector3 (f x1 x2 x3) (f y1 y2 y3) (f z1 z2 z3)
 
+rayIntersect ray@(Ray o d) unitcyl@(UnitCylinder cc)
+  | isNothing roots   = None -- no intersection
+  | t0 < 0 && t1 < 0  = None
+  | t0 < 0 && t1 >= 0 = Backside (rayPointAt ray t1) t1
+  | otherwise         = Frontside (rayPointAt ray t0) t0
+
+  where
+    (Vector3 dx _ dz) = d
+    (Vector3 ox _ oz) = o .-. cc --translates origin to cylinder coordinates
+
+    a = dx*dx + dz*dz
+    b = 2*(dx*ox + dz*oz)
+    c = ox*ox + oz*oz - 1
+    roots = rootspoly2 a b c --`debug` (show (a,b,c))
+    (t0,t1) = sortTuple2 $ getSomething roots
 
 
 rayIntersections :: [Object] -> Ray -> [(Object,Intersection)]
