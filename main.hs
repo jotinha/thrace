@@ -63,7 +63,7 @@ myWorld = World {
     --  Object (Sphere (Vector3 5 (-1) (-15)) 2) (Color 0.90 0.76 0.46) 1 0.0 "c3",
     --  Object (Sphere (Vector3 5 (0) (-25)) 3) (Color 0.65 0.77 0.97) 1 0.0 "c4",
     --  Object (Sphere (Vector3 (-5.5) (0) (-15)) 3) (Color 0.90 0.90 0.90) 1 0.0 "c5",
-      Object (UnitCylinder (Vector3 0 0 (-40))) (Color 1 0 0) 0 0 "cyl"
+      Object (InfiniteCylinder (Vector3 0 0 (-40)) 1)  (Color 1 0 0) 0 0 "cyl"
   ],
   lights = [
     --Light (Vector3 20 100 0) (Color 1 1 1) 0.5
