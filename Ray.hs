@@ -3,6 +3,7 @@ module Ray (module Ray) where
 import Vector
 import Utils
 import Geometry
+import Matrix
 
 data Ray = Ray { origin    :: Vector3, direction :: Vector3 } deriving (Show)
 
@@ -151,6 +152,23 @@ rayIntersect ray@(Ray o d) cyl@(InfiniteCylinder cc r)
     c = ox*ox + oz*oz - r
     roots = rootspoly2 a b c --`debug` (show (a,b,c))
     (t0,t1) = sortTuple2 $ getSomething roots
+
+rayIntersect ray@(Ray o d) cyl@(Cylinder co cd amin amax r) =
+  case rayIntersect (Ray o d') (InfiniteCylinder co r) of 
+    None -> None
+    (Backside  p' t) -> if withinRange p' then Backside  (p' .+. co) t else None
+    (Frontside p' t) -> if withinRange p' then Frontside (p' .+. co) t else None
+
+  where
+    --get rotation transform from cylinder axis to +y
+    rotAxis = cd `vcross` (Vector3 0 1 0)
+    rotCosAngle = cd `vdot` (Vector3 0 1 0)
+    rotMatrix = rotationAroundAxisMatrix3 rotAxis rotCosAngle
+    --apply transform to ray
+    d' = matMultVector3 rotMatrix d
+    Vector3 _ coy _ = co
+
+    withinRange (Vector3 _ y _) = (y + coy) > amin && (y + coy) < amax
 
 
 rayIntersections :: [Object] -> Ray -> [(Object,Intersection)]
