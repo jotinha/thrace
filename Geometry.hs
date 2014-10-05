@@ -6,6 +6,7 @@ import Utils
 data Geometry 
   = Sphere Vector3 Float -- center and radius
   | Plane Vector3 Float -- normal and constant
+  | Disk Vector3 Vector3 Float -- center, normal, radius
   | Triangle Vector3 Vector3 Vector3
   | AABox Vector3 Vector3  --axis aligned bounding box with min and max points
   | InfiniteCylinder Vector3 Float    -- infinite cylinder with main axis in y direction 
@@ -40,11 +41,13 @@ getNormalAt (AABox (Vector3 minx miny minz) (Vector3 maxx maxy maxz)) (Vector3 p
 
 getNormalAt (InfiniteCylinder co _) p = vnormalize $ (p .-. co) .*. (Vector3 1 0 1) --this discards the y coordinate
 getNormalAt (Cylinder co cd amin amax r) p 
-  | a > amax = cd -- top cap
-  | a < amin = vnegate cd -- bottom cap
-  | otherwise = vnormalize $ (p .-. co) .*. (Vector3 1 0 1)
+  | a > amax - tol = cd -- top cap
+  | a < amin + tol = vnegate cd -- bottom cap
+  | otherwise = vnormalize $ l .-. (a *. cd) -- on the side (hopefully cd is normalized!)
   where
-    a = (p .-. co) `vdot` cd --position along axis
+    l = p .-. co
+    a = l `vdot` cd --position along axis
+    tol = 1e-4
 
 
 
@@ -62,3 +65,7 @@ makeAABoxFromPoints points = AABox bmin bmax
   where
     bmin = foldl1 (vvapply min) points
     bmax = foldl1 (vvapply max) points
+
+--plane equation is p.n + d = 0
+makePlaneFromPointAndNormal :: Vector3 -> Vector3 -> Geometry
+makePlaneFromPointAndNormal p n = Plane n' (-(p `vdot` n')) where n' = vnormalize n

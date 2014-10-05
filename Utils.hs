@@ -44,3 +44,6 @@ rootspoly2 a b c | arg < 0    = Nothing
   where 
     arg = b*b - 4*a*c
     pm x y = (x + y, x - y)
+
+xor :: Bool -> Bool -> Bool
+xor = (/=)

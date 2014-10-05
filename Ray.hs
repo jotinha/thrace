@@ -153,24 +153,62 @@ rayIntersect ray@(Ray o d) cyl@(InfiniteCylinder cc r)
     roots = rootspoly2 a b c --`debug` (show (a,b,c))
     (t0,t1) = sortTuple2 $ getSomething roots
 
-rayIntersect ray@(Ray o d) cyl@(Cylinder co cd amin amax r) =
-  case rayIntersect (Ray o d') (InfiniteCylinder co r) of 
-    None -> None
-    (Backside  p' t) -> if withinRange p' then Backside  (p' .+. co) t else None
-    (Frontside p' t) -> if withinRange p' then Frontside (p' .+. co) t else None
+--rayIntersect ray@(Ray o d) cyl@(Cylinder co cd amin amax r) =
+--  case rayIntersect (Ray o d') (InfiniteCylinder co r) of 
+--    None -> None
+--    (Backside  p' t) -> if withinRange p' then Backside  (p' .+. co) t else None
+--    (Frontside p' t) -> if withinRange p' then Frontside (p' .+. co) t else None
 
+--  where
+--    --get rotation transform from cylinder axis to +y
+--    rotAxis = cd `vcross` (Vector3 0 1 0)
+--    rotCosAngle = cd `vdot` (Vector3 0 1 0)
+--    rotMatrix = rotationAroundAxisMatrix3 rotAxis rotCosAngle
+--    --apply transform to ray
+--    d' = matMultVector3 rotMatrix d
+--    Vector3 _ coy _ = co
+
+--    withinRange (Vector3 _ y _) = (y + coy) > amin && (y + coy) < amax
+
+rayIntersect ray@(Ray o d) cyl@(Cylinder co cd hmin hmax r)
+  | isNothing roots                 = None -- no intersection
+  | t0 < 0 && t1 < 0                = None -- facing away
+  | h0 < hmin && h1 < hmin          = None
+  | h0 > hmax && h1 > hmax          = None
+  | h0 < hmin                       = rayIntersect ray bottomCap --`debug` "bottom"
+  | h0 > hmax                       = rayIntersect ray topCap --`debug` "top"
+  | t0 < 0 && t1 >= 0               = Backside (rayPointAt ray t1) t1
+  | otherwise                       = Frontside (rayPointAt ray t0) t0
   where
-    --get rotation transform from cylinder axis to +y
-    rotAxis = cd `vcross` (Vector3 0 1 0)
-    rotCosAngle = cd `vdot` (Vector3 0 1 0)
-    rotMatrix = rotationAroundAxisMatrix3 rotAxis rotCosAngle
-    --apply transform to ray
-    d' = matMultVector3 rotMatrix d
-    Vector3 _ coy _ = co
+    --don't assume d is normalized, just in case we did some transform to get here
+    a = (d `vdot` d) - (d `vdot` cd)^2
+    b = 2*( (l `vdot` d) - (l `vdot` cd)*(d `vdot` cd))
+    c = (l `vdot` l) - (l `vdot` cd)^2 - r^2
+    l = o .-. co
+    roots = rootspoly2 a b c --`debug` (show (a,b,c))
+    (t0,t1) = sortTuple2 $ getSomething roots
 
-    withinRange (Vector3 _ y _) = (y + coy) > amin && (y + coy) < amax
+     --get position in cylinder axis (relative to co)
+    calch t = (l `vdot` cd) + (d `vdot` cd)*t
+    --calch t = ((rayPointAt ray t) .-. co) `vdot` cd
+    (h0,h1) = (calch t0, calch t1)
+
+    outOfRange h = h < hmin || h > hmax -- `debug` (show h)
+    inRange = not . outOfRange
+
+    axisRay@(Ray _ cd') = makeRay co cd --also normalizes cd just in case
+    bottomCap = Disk (rayPointAt axisRay hmin) (vnegate cd') r
+    topCap    = Disk (rayPointAt axisRay hmax) cd' r
 
 
+-- ray -disk intersection
+rayIntersect ray@(Ray o d) disk@(Disk c n r) =
+  case rayIntersect ray (makePlaneFromPointAndNormal c n) of 
+    None -> None
+    intp -> if (vmagnitude (p .-. c)) < r then intp else None
+      where
+        p = getp' intp
+           
 rayIntersections :: [Object] -> Ray -> [(Object,Intersection)]
 rayIntersections []   _     = []
 rayIntersections (o:os) ray = (rayIntersect' o) ++ (rayIntersections os ray)
@@ -183,21 +221,28 @@ rayIntersections (o:os) ray = (rayIntersect' o) ++ (rayIntersections os ray)
 rayIntersectionsWithinRange :: (Float, Float) -> [Object] -> Ray -> [(Object,Intersection)]
 rayIntersectionsWithinRange (tmin,tmax) objs ray = (filter (withinRange tmin tmax . gett)) $ rayIntersections objs ray
   
-gett :: (Object,Intersection) -> Float
-gett (_,(Frontside _ t)) = t
-gett (_,(Backside _ t))  = t
+gett' :: Intersection -> Float
+gett' (Frontside _ t) = t
+gett' (Backside _ t) = t
 
-getp :: (Object,Intersection) -> Vector3
-getp (_,(Frontside p _)) = p
-getp (_,(Backside p _))  = p
+gett (_,i) = gett' i
 
-isFrontside :: (Object,Intersection) -> Bool
-isFrontside (_,(Frontside _ _)) = True
-isFrontside (_,(Backside  _ _)) = False
+getp' :: Intersection -> Vector3
+getp' (Frontside p _) = p
+getp' (Backside p _) = p
 
-isBackside :: (Object,Intersection) -> Bool
-isBackside (_,(Frontside _ _)) = False
-isBackside (_,(Backside  _ _)) = True
+getp (_,i) = getp' i
+
+isFrontside' :: Intersection -> Bool
+isFrontside' (Frontside _ _) = True
+isFrontside' (Backside _ _ ) = False
+isFrontside (_,i) = isFrontside' i
+
+isBackside' :: Intersection -> Bool
+isBackside' (Frontside _ _) = False
+isBackside' (Backside _ _ ) = True
+isBackside (_,i) = isBackside' i
+
 
 
 pickObject :: [Object] -> Ray -> (Float,Float) -> Maybe (Object,Intersection)

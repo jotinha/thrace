@@ -19,8 +19,8 @@ traceRay world ray trange maxdepth
 
     useShading = True
     useShadows = False
-    useReflection = True
-    useRefraction = True
+    useReflection = False
+    useRefraction = False
 
     black   = Color 0 0 0
     white   = Color 1 1 1
