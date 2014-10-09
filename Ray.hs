@@ -4,21 +4,10 @@ import Vector
 import Utils
 import Geometry
 import Matrix
+import Object
+import Color
 
 data Ray = Ray { origin    :: Vector3, direction :: Vector3 } deriving (Show)
-
-data Object = Object {
-  geometry      :: Geometry,
-  color         :: Color,
-  reflection    :: Float,
-  transparency  :: Float,
-  objId :: String
-}
-
-instance Eq Object where
-  a == b = (objId a) == (objId b)
-
-data Color = Color Float Float Float deriving (Show)
 
 data World = World { 
   objects :: [Object],

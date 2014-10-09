@@ -6,7 +6,12 @@ import Tracer
 import Vector
 import Ray
 import Geometry
-import Debug.Trace
+import Utils
+import Object
+import Color
+
+cameraOrigin = Vector3 0 30 0
+maxdepth = 5
 
 pixel2World :: Resolution -> Int -> Int -> (Float,Float,Float)
 pixel2World (imWidth,imHeight) i j = toWorld ( toScreen ( toNDC ( toRaster i j) ) ) 
