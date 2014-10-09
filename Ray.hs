@@ -189,7 +189,6 @@ rayIntersect ray@(Ray o d) cyl@(Cylinder co cd hmin hmax r)
     bottomCap = Disk (rayPointAt axisRay hmin) (vnegate cd') r
     topCap    = Disk (rayPointAt axisRay hmax) cd' r
 
-
 -- ray -disk intersection
 rayIntersect ray@(Ray o d) disk@(Disk c n r) =
   case rayIntersect ray (makePlaneFromPointAndNormal c n) of 
@@ -203,9 +202,13 @@ rayIntersections []   _     = []
 rayIntersections (o:os) ray = (rayIntersect' o) ++ (rayIntersections os ray)
   where
     rayIntersect' obj = 
-      case rayIntersect ray (geometry obj) of None                -> []
-                                              int@(Backside  _ _) -> [(obj,int)]
-                                              int@(Frontside _ _) -> [(obj,int)]
+      case rayIntersectObject ray obj of None                -> []
+                                         int@(Backside  _ _) -> [(obj,int)]
+                                         int@(Frontside _ _) -> [(obj,int)]
+
+
+rayIntersectObject :: Ray -> Object -> Intersection
+rayIntersectObject ray obj = rayIntersect ray (geometry obj)
 
 rayIntersectionsWithinRange :: (Float, Float) -> [Object] -> Ray -> [(Object,Intersection)]
 rayIntersectionsWithinRange (tmin,tmax) objs ray = (filter (withinRange tmin tmax . gett)) $ rayIntersections objs ray
@@ -232,6 +235,10 @@ isBackside' (Frontside _ _) = False
 isBackside' (Backside _ _ ) = True
 isBackside (_,i) = isBackside' i
 
+isNone :: Intersection -> Bool
+isNone None = True
+isNone _ = False
+
 
 
 pickObject :: [Object] -> Ray -> (Float,Float) -> Maybe (Object,Intersection)
@@ -245,3 +252,5 @@ pickObjectAllowBackside  objects ray trange =
   case rayIntersectionsWithinRange trange objects ray of
     []  -> Nothing
     lst -> Just $ minimumWith gett lst
+
+

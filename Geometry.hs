@@ -69,3 +69,19 @@ makeAABoxFromPoints points = AABox bmin bmax
 --plane equation is p.n + d = 0
 makePlaneFromPointAndNormal :: Vector3 -> Vector3 -> Geometry
 makePlaneFromPointAndNormal p n = Plane n' (-(p `vdot` n')) where n' = vnormalize n
+
+
+
+contains :: Geometry -> Vector3 -> Bool
+contains (Sphere c r) p = let d = p .-. c in d `vdot` d <= r*r
+contains (AABox pmin pmax) p = allPositive (p .-. pmin) && allPositive (pmax .-. p)
+  where
+    allPositive (Vector3 x y z) = all (>=0) [x,y,z]
+
+scaleGeoBy :: Float -> Geometry -> Geometry
+scaleGeoBy s (Sphere c r) = Sphere c (r*s)
+scaleGeoBy s (AABox pmin pmax) = AABox (pmin .* s) (pmax .* s)
+
+centerOf :: Geometry -> Vector3
+centerOf (Sphere c r) = c
+centerOf (AABox pmin pmax) = 0.5 *. (pmin .+. pmax)

@@ -9,8 +9,9 @@ import Geometry
 import Utils
 import Object
 import Color
+import Graphene
 
-cameraOrigin = Vector3 0 30 0
+cameraOrigin = Vector3 0 3 0
 maxdepth = 5
 
 pixel2World :: Resolution -> Int -> Int -> (Float,Float,Float)
@@ -22,16 +23,16 @@ pixel2World (imWidth,imHeight) i j = toWorld ( toScreen ( toNDC ( toRaster i j) 
     toRaster i j      = (fromIntegral j + 0.5, fromIntegral i + 0.5)
     toNDC    (x,y)    = (x/imWidth',y/imHeight')                 
     toScreen (nx,ny)  = ((2*nx - 1)*imAspRatio, - (2*ny - 1))    
-    toWorld  (sx,sy)  =  (sx, sy, -3)
+    toWorld  (sx,sy)  =  (sx,sy, -1)
 
 makeImage :: Resolution -> World -> [Color]
 makeImage res@(width,height) world = [
-  traceRay world (castRay $ pixel2World res i j ) (near,far) 5 |
+  traceRay world (castRay $ pixel2World res i j ) (near,far) maxdepth |
     i <- [1..height], 
     j <- [1..width]
   ]
   where
-    castRay (a,b,c) = makeRay (Vector3 0 0 0) (Vector3 a b c)
+    castRay (a,b,c) = makeRay cameraOrigin (Vector3 a b c)
     near = 0
     far = 1/0 --infinity
 
@@ -42,7 +43,7 @@ writePPM (width,height) pixels  | width*height /= length pixels = error "Invalid
                                   B.putStr $ body
   
   where
-    header = trace ("maxc :" ++ show maxc) $ BC.pack $ "P6\n" ++ show width ++ " " ++ show height ++ "\n255\n"
+    header = BC.pack $ "P6\n" ++ show width ++ " " ++ show height ++ "\n255\n"  `debug` ("maxc :" ++ show maxc)
     body = B.pack $ concatMap color2ints pixels
     maxc = maximum $ map (\(Color r g b) -> maximum [r,g,b]) pixels
     --body = show $ map color2ints pixels

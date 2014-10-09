@@ -13,15 +13,15 @@ traceRay :: World -> Ray -> (Float,Float) -> Int -> Color
 traceRay world ray trange maxdepth
   | maxdepth <= 0           = white
   | isNothing intersection' = bgcolor
-  | isDiffuse               = colorObject `colorMultiply` colorLights
-  | otherwise               = (colorObject `colorMultiply` colorMix)
+  | isDiffuse               = (colorObject `colorMultiply` colorLights) --`debug` "diffuse"
+  | otherwise               = colorClamp $ colorObject `colorMultiply` (colorLights `colorAdd` colorMix)
 
   where
 
-    useShading = True
+    useShading = False
     useShadows = False
-    useReflection = False
-    useRefraction = False
+    useReflection = True
+    useRefraction = True
 
     black   = Color 0 0 0
     white   = Color 1 1 1
@@ -40,12 +40,13 @@ traceRay world ray trange maxdepth
     colorLights  = foldl colorAdd black $ map colorOneLight (lights world)
       where 
         colorOneLight :: Light -> Color
-        colorOneLight (Light lightPos _ _)  | not useShading = colorObject
-                                            | not useShadows = lightComponent
-                                            | isNothing shadowIntersection = lightComponent
-                                            | otherwise = black
+        colorOneLight (Light lightPos _ lightIntensity)
+          | not useShading = colorObject
+          | not useShadows = lightComponent
+          | isNothing shadowIntersection = lightComponent
+          | otherwise = black
           where
-            lightComponent = colorMultiplyScalar white (ccos_light)                                  
+            lightComponent = colorMultiplyScalar white (ccos_light * (lightIntensity))
             ccos_light = max 0 $ (vnormalize lightDir) `vdot` surfNormal
             lightDir = (lightPos .-. p)
             shadowRay = spawnRay lightDir
@@ -61,9 +62,9 @@ traceRay world ray trange maxdepth
 
     -- Mix refraction and reflection -------------------------------------------------------------
     colorMix = if reflectionAmount > 0 || refractionAmount > 0
-               then (colorMultiplyScalar colorReflection $ reflectionAmount) 
+               then (colorMultiplyScalar colorReflection $ reflectionAmount / (reflectionAmount + refractionAmount)) 
                       `colorAdd` 
-                    (colorMultiplyScalar colorRefraction $ refractionAmount) 
+                    (colorMultiplyScalar colorRefraction $ refractionAmount / (reflectionAmount + refractionAmount)) 
                else white
     
     reflectionAmount  = if useReflection 
