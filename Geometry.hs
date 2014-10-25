@@ -70,17 +70,18 @@ makeAABoxFromPoints points = AABox bmin bmax
 makePlaneFromPointAndNormal :: Vector3 -> Vector3 -> Geometry
 makePlaneFromPointAndNormal p n = Plane n' (-(p `vdot` n')) where n' = vnormalize n
 
-
-
 contains :: Geometry -> Vector3 -> Bool
 contains (Sphere c r) p = let d = p .-. c in d `vdot` d <= r*r
 contains (AABox pmin pmax) p = allPositive (p .-. pmin) && allPositive (pmax .-. p)
   where
     allPositive (Vector3 x y z) = all (>=0) [x,y,z]
 
+-- scale keeping the center at the same position
 scaleGeoBy :: Float -> Geometry -> Geometry
 scaleGeoBy s (Sphere c r) = Sphere c (r*s)
-scaleGeoBy s (AABox pmin pmax) = AABox (pmin .* s) (pmax .* s)
+scaleGeoBy s box@(AABox pmin pmax) = AABox (c .+. ((pmin .-. c) .* s))
+                                           (c .+. ((pmax .-. c) .* s))
+  where c = centerOf box
 
 centerOf :: Geometry -> Vector3
 centerOf (Sphere c r) = c
