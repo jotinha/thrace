@@ -12,7 +12,7 @@ data Geometry
   | InfiniteCylinder Vector3 Float    -- infinite cylinder with main axis in y direction 
                                       -- with args : origin  radius
   | Cylinder Vector3 Vector3 Float Float Float  -- axis origin, axis direction, tmin, tmax, radius
-
+  | Inverted Geometry
 
 -- expects p to be at the surface
 getNormalAt :: Geometry -> Vector3 -> Vector3
@@ -38,6 +38,7 @@ getNormalAt (AABox (Vector3 minx miny minz) (Vector3 maxx maxy maxz)) (Vector3 p
 --    (pz - minz, Vector3 0 0 (-1)  ),
 --    (pz - maxz, Vector3 0 0 1     )
 --  ]
+getNormalAt (Inverted g) p = vnegate $ getNormalAt g p
 
 getNormalAt (InfiniteCylinder co _) p = vnormalize $ (p .-. co) .*. (Vector3 1 0 1) --this discards the y coordinate
 getNormalAt (Cylinder co cd amin amax r) p 
@@ -48,8 +49,6 @@ getNormalAt (Cylinder co cd amin amax r) p
     l = p .-. co
     a = l `vdot` cd --position along axis
     tol = 1e-4
-
-
 
 isGeometryOpen :: Geometry -> Bool
 isGeometryOpen (Triangle _ _ _) = True
@@ -75,6 +74,8 @@ contains (Sphere c r) p = let d = p .-. c in d `vdot` d <= r*r
 contains (AABox pmin pmax) p = allPositive (p .-. pmin) && allPositive (pmax .-. p)
   where
     allPositive (Vector3 x y z) = all (>=0) [x,y,z]
+
+contains (Inverted g) p = not $ contains g p
 
 -- scale keeping the center at the same position
 scaleGeoBy :: Float -> Geometry -> Geometry

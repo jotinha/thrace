@@ -96,6 +96,10 @@ rayIntersect ray@(Ray o d) (AABox bmin bmax)
     vvvApply :: (Float -> Float -> Float -> Float) -> Vector3 -> Vector3 -> Vector3 -> Vector3
     vvvApply f (Vector3 x1 y1 z1) (Vector3 x2 y2 z2) (Vector3 x3 y3 z3) = Vector3 (f x1 x2 x3) (f y1 y2 y3) (f z1 z2 z3)
 
+rayIntersect ray (Inverted g) = case rayIntersect ray g of 
+  Backside p t -> Frontside p t
+  Frontside p t -> Backside p t
+  None -> None
 
 -- Ray - AABox intersection
 --rayIntersect ray@(Ray o d) (AABox bmin bmax) 
