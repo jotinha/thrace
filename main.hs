@@ -9,10 +9,14 @@ import Geometry
 import Utils
 import Object
 import Color
-import Graphene
+import World
+import Light
+--import Graphene
 
 cameraOrigin = Vector3 0 3 0
 maxdepth = 5
+
+type Resolution = (Int, Int)
 
 pixel2World :: Resolution -> Int -> Int -> (Float,Float,Float)
 pixel2World (imWidth,imHeight) i j = toWorld ( toScreen ( toNDC ( toRaster i j) ) ) 

@@ -9,16 +9,6 @@ import Color
 
 data Ray = Ray { origin    :: Vector3, direction :: Vector3 } deriving (Show)
 
-data World = World { 
-  objects :: [Object],
-  lights  :: [Light],
-  backgroundColor :: Color
-}
-
-data Light = Light Vector3 Color Float --position color intensity
-
-type Resolution = (Int, Int)
-
 data Intersection = None | Backside Vector3 Float | Frontside Vector3 Float deriving (Eq,Show)
 
 makeRay :: Vector3 -> Vector3 -> Ray

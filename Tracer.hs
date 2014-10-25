@@ -6,6 +6,8 @@ import Vector
 import Geometry
 import Color
 import Object
+import Light
+import World
 import qualified Physics
 import Data.Tuple (swap)
 
@@ -18,7 +20,7 @@ traceRay world ray trange maxdepth
 
   where
 
-    useShading = False
+    useShading = True
     useShadows = False
     useReflection = True
     useRefraction = True
