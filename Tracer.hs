@@ -21,7 +21,7 @@ traceRay world ray trange maxdepth
   where
 
     useShading = True
-    useShadows = False
+    useShadows = True
     useReflection = True
     useRefraction = True
 
@@ -37,25 +37,32 @@ traceRay world ray trange maxdepth
     isDiffuse = (transparency object) == 0 && (reflection object) == 0
 
     colorObject = (color object)
-    
+
     -- Cast shadow rays ------------------------------------------------------------------------
-    colorLights  = foldl colorAdd black $ map colorOneLight (lights world)
+    colorLights = colorSum $ map colorOneLight (lights world)
+
       where 
         colorOneLight :: Light -> Color
-        colorOneLight (Light lightPos _ lightIntensity)
-          | not useShading = colorObject
-          | not useShadows = lightComponent
-          | isNothing shadowIntersection = lightComponent
-          | otherwise = black
+        colorOneLight light@((Light lightType lightColor)) = 
+          colorAverage $ map sampleOnce (raysToLight lightType p) 
           where
-            lightComponent = colorMultiplyScalar white (ccos_light * (lightIntensity))
-            ccos_light = max 0 $ (vnormalize lightDir) `vdot` surfNormal
-            lightDir = (lightPos .-. p)
-            shadowRay = spawnRay lightDir
-            distToLight = vmagnitude lightDir
+            
+            sampleOnce :: Vector3 -> Color
+            sampleOnce lightDir
+              | not useShading = colorObject
+              | not useShadows = lightComponent
+              | isNothing shadowIntersection = lightComponent
+              | otherwise = black
+              where
+                lightComponent = colorMultiplyScalar lightColor (ccos_light * (lightFalloff lightType distToLight))
+                ccos_light = max 0 $ (vnormalize lightDir) `vdot` surfNormal
 
-            shadowIntersection = pickObjectAllowBackside (objects world) shadowRay (0,distToLight)
+                shadowRay = spawnRay lightDir
+                distToLight = vmagnitude lightDir
 
+                shadowIntersection = pickObjectAllowBackside (objects world) shadowRay (0,distToLight)
+
+               
     -- Cast reflection ray ------------------------------------------------------------------------
     colorReflection   = traceRay world (spawnRay reflectionvector) trange (maxdepth -1)
                         

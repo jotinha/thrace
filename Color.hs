@@ -41,3 +41,9 @@ colorClamp :: Color -> Color
 colorClamp (Color r g b) = Color (m r) (m g) (m b)
   where
     m = limits 0 1
+
+colorAverage :: [Color] -> Color
+colorAverage (x:[]) = x
+colorAverage xs = colorMultiplyScalar (colorSum xs) (1 / (fromIntegral ( length xs )))
+
+colorSum = foldl1 colorAdd
