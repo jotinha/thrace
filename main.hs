@@ -13,7 +13,7 @@ import World
 import Light
 --import Graphene
 
-cameraOrigin = Vector3 0 3 0
+cameraOrigin = Vector3 0 0 0
 maxdepth = 5
 
 type Resolution = (Int, Int)
@@ -56,33 +56,7 @@ writePPM (width,height) pixels  | width*height /= length pixels = error "Invalid
     
 --main = print $ rayIntersect (makeRay (Vector3 0 0 0) (Vector3 0 0 10)) (Sphere (Vector3 0 0 10) 2)
 
-myWorld = World {
-  objects = [
-    --Object (Sphere (Vector3 (-6) 3  (-10)) 5 ) (Color 0.5 0.5 1) 1 1 "sphere1",
-    --Object (Sphere (Vector3 5 2  (-13)) 5 ) (Color 0.8 0.5 0.5) 1 1 "sphere1b",
-    --Object (Sphere (Vector3 0 (0) (-30)) 20 ) (Color 1 0.5 0.5) 1 1 "sphere2",
-    --Object (Sphere (Vector3 (-20) 0 (-20)) 5 ) (Color 0 0.8 0.0) 1 1 "sphere3",
-    --Object (Sphere (Vector3 0 40 (-100)) 5 ) (Color 0 0.4 0.0) 1 1 "sphere4",
-    --Object (Sphere (Vector3 8 8 (-25)) 5 ) (Color 0.6 0.5 1.0) 1 1 "sphere5"
-    --Object (Plane  (Vector3 0 1 0) (6) )  (Color 1 1 1) 1 0 "plane"
-    --Object (Triangle (Vector3 0 0 (-20)) (Vector3 (10) 0 (-20)) (Vector3 (10) (10) (-20))) 
-           --(Color 0.5 0.1 0.1) 0 0 "tri1"
-    --Object (makeAABoxFromPoints [Vector3 (2) (-5) (-30), Vector3 (10) 5 (-25)]) (Color 0 1 0) 1 0 "box",
-    --  --Object (Sphere (Vector3 0 (-10004) (-30)) 10000) (Color 0.2 0.2 0.2) 0 0 "c1",
-    --  Object (Sphere (Vector3 0 0 (-20)) 4) (Color 1 0.32 0.36) 1 1 "c2",
-    --  Object (Sphere (Vector3 5 (-1) (-15)) 2) (Color 0.90 0.76 0.46) 1 0.0 "c3",
-    --  Object (Sphere (Vector3 5 (0) (-25)) 3) (Color 0.65 0.77 0.97) 1 0.0 "c4",
-    --  Object (Sphere (Vector3 (-5.5) (0) (-15)) 3) (Color 0.90 0.90 0.90) 1 0.0 "c5",
-      --Object (InfiniteCylinder (Vector3 0 0 (-40)) 1)  (Color 1 0 0) 0 0 "cyl"
-      Object (Cylinder (Vector3 0 (-6) (-40)) (vnormalize $ Vector3 1 1 (-1)) (-10) 10 3) (Color 0 1 0) 0 0 "ccyl"
-  ],
-  lights = [
-    --Light (Vector3 20 100 0) (Color 1 1 1) 0.5
-    Light (Vector3 (0) 20 (-30)) (Color 1 1 1) 1
-    --Light (Vector3 0 0 0) (Color 1 1 1) 1
-  ],
-  backgroundColor = Color 1 1 1
-}
+#include "examples/spheres.hs"
 
 myRes = (500,500)
 
