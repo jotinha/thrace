@@ -31,7 +31,7 @@ pixel2World (imWidth,imHeight) i j = toWorld ( toScreen ( toNDC ( toRaster i j) 
 
 makeImage :: Resolution -> World -> [Color]
 makeImage res@(width,height) world = [
-  traceRay world (castRay $ pixel2World res i j ) (near,far) maxdepth |
+  colorClamp $ traceRay world (castRay $ pixel2World res i j ) (near,far) maxdepth |
     i <- [1..height], 
     j <- [1..width]
   ]
@@ -56,7 +56,7 @@ writePPM (width,height) pixels  | width*height /= length pixels = error "Invalid
     
 --main = print $ rayIntersect (makeRay (Vector3 0 0 0) (Vector3 0 0 10)) (Sphere (Vector3 0 0 10) 2)
 
-#include "examples/spheres.hs"
+#include "examples/area_lights.hs"
 
 myRes = (500,500)
 

@@ -3,7 +3,7 @@ module Color where
 import Utils
 
 
-data Color = Color Float Float Float deriving (Show)
+data Color = Color Float Float Float deriving (Show,Eq)
 
 colorMultiply :: Color -> Color -> Color
 colorMultiply (Color 0 0 0) _ = Color 0 0 0 -- improves performance?

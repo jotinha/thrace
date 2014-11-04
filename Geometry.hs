@@ -13,6 +13,7 @@ data Geometry
                                       -- with args : origin  radius
   | Cylinder Vector3 Vector3 Float Float Float  -- axis origin, axis direction, tmin, tmax, radius
   | Inverted Geometry
+  deriving (Show,Eq)
 
 -- expects p to be at the surface
 getNormalAt :: Geometry -> Vector3 -> Vector3
@@ -87,3 +88,4 @@ scaleGeoBy s box@(AABox pmin pmax) = AABox (c .+. ((pmin .-. c) .* s))
 centerOf :: Geometry -> Vector3
 centerOf (Sphere c r) = c
 centerOf (AABox pmin pmax) = 0.5 *. (pmin .+. pmax)
+

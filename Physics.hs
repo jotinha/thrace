@@ -26,14 +26,15 @@ fresnel cos_i n1 n2 | tir = (1,0)
     sin_i2  = 1 - cos_i^2
 
 fresnel' :: Float -> Float -> Float -> Float -> (Float,Float)
-fresnel' cos_i cos_t n1 n2 | cos_i < 0 || cos_i > 1 = error $ "bad cos_i " ++ (show cos_i)
-                           | cos_t < 0 || cos_t > 1 = error $ "bad cos_t " ++ (show cos_t)
+fresnel' cos_i cos_t n1 n2 | cos_i < 0 - tol || cos_i > 1 + tol = error $ "bad cos_i " ++ (show cos_i)
+                           | cos_t < 0 - tol || cos_t > 1 + tol = error $ "bad cos_t " ++ (show cos_t)
                            | otherwise = (r,t)
   where
     r_normal    = ((n1*cos_i - n2*cos_t) / (n1*cos_i + n2*cos_t))^2
     r_parallel  = ((n2*cos_i - n1*cos_t) / (n2*cos_i + n1*cos_t))^2
     r           = 0.5 * (r_normal + r_parallel)
     t           = 1 - r
+    tol = 1e-5
 
 fresnelSchlickApprox :: Float -> Float -> Float -> (Float,Float)
 fresnelSchlickApprox cos_i n1 n2  | n1 <= n2 = shlick cos_i

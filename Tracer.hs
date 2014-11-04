@@ -10,13 +10,15 @@ import Light
 import World
 import qualified Physics
 import Data.Tuple (swap)
+import Data.List (elemIndex)
+import Random
 
 traceRay :: World -> Ray -> (Float,Float) -> Int -> Color
 traceRay world ray trange maxdepth
   | maxdepth <= 0           = white
   | isNothing intersection' = bgcolor
   | isDiffuse               = (colorObject `colorMultiply` colorLights) --`debug` "diffuse"
-  | otherwise               = colorClamp $ colorObject `colorMultiply` (colorLights `colorAdd` colorMix)
+  | otherwise               = colorObject `colorMultiply` (colorLights `colorAdd` colorMix)
 
   where
 
@@ -24,6 +26,7 @@ traceRay world ray trange maxdepth
     useShadows = True
     useReflection = True
     useRefraction = True
+    numberShadowRays = 1
 
     black   = Color 0 0 0
     white   = Color 1 1 1
@@ -44,8 +47,10 @@ traceRay world ray trange maxdepth
       where 
         colorOneLight :: Light -> Color
         colorOneLight light@((Light lightType lightColor)) = 
-          colorAverage $ map sampleOnce (raysToLight lightType p) 
+          colorAverage $ map sampleOnce (raysToLight lightType p (Just (numberShadowRays,seed)))
           where
+            seed = generateSeed [idx] [p,incidentDir,lightPos lightType]
+            (Just idx) = elemIndex light (lights world)
             
             sampleOnce :: Vector3 -> Color
             sampleOnce lightDir

@@ -39,6 +39,7 @@ class Vector a where
   vapply :: (Float -> Float) -> a -> a
   vvapply :: (Float -> Float -> Float) -> a -> a -> a
 
+  vToList :: a -> [Float]
 
   -- implemented
   (+.)  :: Float -> a -> a
@@ -84,6 +85,7 @@ instance Vector Vector2 where
   vfill s = Vector2 s s
   vapply f (Vector2 x y) = Vector2 (f x) (f y)
   vvapply f (Vector2 x1 y1) (Vector2 x2 y2) = Vector2 (f x1 x2) (f y1 y2)
+  vToList (Vector2 x y) = [x,y]
 
 instance Vector Vector3 where
   (Vector3 x1 y1 z1) .+. (Vector3 x2 y2 z2) = Vector3 (x1 + x2) (y1 + y2) (z1 + z2)
@@ -95,6 +97,7 @@ instance Vector Vector3 where
   vfill s = Vector3 s s s
   vapply f (Vector3 x y z) = Vector3 (f x) (f y) (f z)
   vvapply f (Vector3 x1 y1 z1) (Vector3 x2 y2 z2) = Vector3 (f x1 x2) (f y1 y2) (f z1 z2)
+  vToList (Vector3 x y z) = [x,y,z]
 
 
 instance Vector Vector4 where
@@ -107,6 +110,7 @@ instance Vector Vector4 where
   vfill s = Vector4 s s s s
   vapply f (Vector4 x y z w)  = Vector4 (f x) (f y) (f z) (f w)
   vvapply f (Vector4 x1 y1 z1 w1) (Vector4 x2 y2 z2 w2) = Vector4 (f x1 x2) (f y1 y2) (f z1 z2) (f w1 w2)
+  vToList (Vector4 x y z w) = [x,y,z,w]
 
 vcross :: Vector3 -> Vector3 -> Vector3
 (Vector3 x1 y1 z1) `vcross` (Vector3 x2 y2 z2) = Vector3 s1 s2 s3
