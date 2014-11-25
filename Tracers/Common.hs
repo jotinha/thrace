@@ -19,7 +19,7 @@ useRefraction = True
 allowTransparentShadows = True -- Only for tracers that support transparency
 
 fresnel :: Float -> Float -> Material -> (Float,Float)
-fresnel _ _ (Lambertian _ _) = (0,0) --no reflection or refraction
+fresnel _ _ (Lambertian _) = (0,0) --no reflection or refraction
 fresnel cos_i ni mat = case (medium mat) of Dielectric  n   -> fresnelDiel cos_i ni n
                                             Conductor   n k -> fresnelCond cos_i n k
 -- localIllumination : shades surface at point p given lights in scene

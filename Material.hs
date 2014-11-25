@@ -5,28 +5,25 @@ import Vector
 import Utils
 
 data Material 
-  = Lambertian { diffuseColor :: Color , shadingType :: ShadingType}
-  | BlinnPhong { diffuseColor :: Color, specularColor :: Color, shininess :: Float, medium :: MaterialMedium, shadingType :: ShadingType}
+  = Lambertian { diffuseColor :: Color}
+  | BlinnPhong { diffuseColor :: Color, specularColor :: Color, shininess :: Float, medium :: MaterialMedium}
   | Emissive   { emissionColor :: Color } 
 
 data MaterialMedium
   = Dielectric { ior :: Float} 
   | Conductor { ior :: Float, absorptionCoeff :: Float }
 
-data ShadingType = BasicShading | SampleShading Int
-
-
 matIOR :: Material -> Float
 matIOR BlinnPhong{medium=medium} = ior medium
 matIOR _ = error "No ior for this material"
 
 getDiffuseComponent :: Material -> Color
-getDiffuseComponent (Lambertian c _) = c --`colorMultiplyScalar` (1/pi)
+getDiffuseComponent (Lambertian c) = c --`colorMultiplyScalar` (1/pi)
 getDiffuseComponent (Emissive _)   = black 
 getDiffuseComponent BlinnPhong{diffuseColor = c} = c
 
 getSpecularComponent :: Material -> Float -> Color
-getSpecularComponent (Lambertian _ _) _ = black
+getSpecularComponent (Lambertian _) _ = black
 getSpecularComponent (Emissive _) _ = black
 -- cos_h is cos of angle between view and half vector
 -- for physically plausible results, cspec should be fresnel(cos_h) 
