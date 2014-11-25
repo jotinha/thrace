@@ -29,3 +29,5 @@ raysToLight (DirectionalLight d) _ _ = [vnegate d] --should multiply by Inf?
 raysToLight (GeomLight geo) p Nothing      = [(centerOf geo) .-. p]
 raysToLight (GeomLight geo) p (Just (1,_)) = [(centerOf geo) .-. p]
 raysToLight (GeomLight geo) p (Just (n,g)) = take n [v .-. p | v <- randomPointsInSurfaceOf geo g]
+
+

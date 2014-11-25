@@ -11,7 +11,7 @@ import Object
 import Color
 import World
 import Light
---import Graphene
+import Material
 
 cameraOrigin = Vector3 0 0 0
 maxdepth = 5

@@ -2,8 +2,10 @@ module Color where
 
 import Utils
 
-
 data Color = Color Float Float Float deriving (Show,Eq)
+
+black = Color 0 0 0
+white = Color 1 1 1
 
 colorMultiply :: Color -> Color -> Color
 colorMultiply (Color 0 0 0) _ = Color 0 0 0 -- improves performance?
@@ -14,7 +16,8 @@ colorMultiply (Color r1 g1 b1) (Color r2 g2 b2) = Color (multc r1 r2) (multc g1 
 
 
 colorMultiplyScalar :: Color -> Float -> Color
-colorMultiplyScalar _ 0 = Color 0 0 0     -- improves performance?
+colorMultiplyScalar _ 0 = Color 0 0 0 
+colorMultiplyScalar c 1 = c               
 colorMultiplyScalar (Color r g b) s = Color (multc r) (multc g) (multc b)
   where 
     --multc c = limits 0 1 c*s

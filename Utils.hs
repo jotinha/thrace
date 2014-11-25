@@ -10,7 +10,9 @@ maximumWith :: Ord b => (a -> b) -> [a] -> a
 maximumWith f xs = last $ sortWith f xs
 
 limits  :: Ord t => t -> t -> t -> t
-limits minv maxv = (max minv) . (min maxv)
+limits minv maxv  v | v < minv = minv
+                    | v > maxv = maxv
+                    | otherwise = v
 
 withinRange :: Ord t => t -> t -> t -> Bool
 withinRange minx maxx x = x >= minx && x <= maxx

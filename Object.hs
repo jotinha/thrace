@@ -2,11 +2,10 @@ module Object where
 
 import Geometry
 import Color
+import Material
 
 data Object = Object {
   geometry      :: Geometry,
-  color         :: Color,
-  reflection    :: Float,
-  transparency  :: Float,
+  material      :: Material,
   objId         :: String
 }
