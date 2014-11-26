@@ -53,6 +53,9 @@ localIllumination world v p n matBRDF nsr useTransparentShadows =
             d = vmagnitude vecToLight
             l = vecToLight ./ d 
 
+            --l' is relative to center of light. This is *wrong* but avoids noise for surfaces
+            --illuminated by area lights.
+            --l' = vnormalize $ (lightPos lightType) .-. p
             ccos_light = max 0 $ l `vdot` n --what if it's inside object??
             lightIrradianceHere = lightColor `colorMultiplyScalar` (ccos_light * (lightFalloff lightType d))
 

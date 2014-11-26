@@ -28,6 +28,11 @@ raysToLight (PointLight o) p _ = [o .-. p]
 raysToLight (DirectionalLight d) _ _ = [vnegate d] --should multiply by Inf?
 raysToLight (GeomLight geo) p Nothing      = [(centerOf geo) .-. p]
 raysToLight (GeomLight geo) p (Just (1,_)) = [(centerOf geo) .-. p]
-raysToLight (GeomLight geo) p (Just (n,g)) = take n [v .-. p | v <- randomPointsInSurfaceOf geo g]
+raysToLight (GeomLight geo) p (Just (n,g)) = take n $
+  [v .-. p | v <- randomPointsOnSurfaceOf geo g]
+  where
+    isPositiveSide v = ((v .-. p) `vdot` (v .-. c)) <= 0
+    first = c .-. p -- use this as first ray?
+    c = centerOf geo
 
 
