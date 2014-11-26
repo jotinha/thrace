@@ -57,6 +57,7 @@ localIllumination world v p n matBRDF nsr useTransparentShadows =
             lightIrradianceHere = lightColor `colorMultiplyScalar` (ccos_light * (lightFalloff lightType d))
 
             shadowRay = spawnRay p l
+            --don't include emissive sources in objects
             shadowAlpha = case pickObjectAllowBackside (objects world) shadowRay (0,d) of
               Nothing      -> 1
               Just (obj,_) -> if useTransparentShadows then getShadowAlpha $ material obj else 0

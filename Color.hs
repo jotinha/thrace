@@ -50,3 +50,7 @@ colorAverage (x:[]) = x
 colorAverage xs = colorMultiplyScalar (colorSum xs) (1 / (fromIntegral ( length xs )))
 
 colorSum = foldl1 colorAdd
+
+isBlack :: Color -> Bool
+isBlack (Color 0 0 0) = True
+isBlack _ = False

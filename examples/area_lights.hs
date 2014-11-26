@@ -15,7 +15,7 @@ myWorld = World {
   ],
   lights = [
     --Light (PointLight (Vector3 (0) 4 (-2))) (Color 20 20 20),
-    Light (GeomLight (Sphere (Vector3 3 3 (0)) 0.5)) (Color 30 30 30)
+    Light (GeomLight (Sphere (Vector3 3 3 (0)) 2)) (Color 30 30 30)
   ],
-  backgroundColor = Color 0 0 0
+  backgroundColor = black
 }

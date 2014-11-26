@@ -30,6 +30,9 @@ getSpecularComponent (Emissive _) _ = black
 getSpecularComponent BlinnPhong{specularColor = cspec, shininess=m} cos_h = 
   cspec `colorMultiplyScalar` (((m + 8) / 8) * (cos_h ** m))
 
+getEmissiveComponent :: Material -> Color
+getEmissiveComponent (Emissive c) = c
+getEmissiveComponent _ = black
 
 type BRDF = Vector3 -> Vector3 -> Vector3 -> Color
 -- brdf takes a material and three vectors and returns a color

@@ -20,24 +20,30 @@ traceRay :: World -> Ray -> (Float,Float) -> Int -> Color
 traceRay world ray trange maxdepth
   | maxdepth <= 0           = white
   | isNothing intersection' = backgroundColor world
+  | isEmissive              = colorEmissive
   | otherwise               = colorDiffuse `colorAdd` colorMix
 
   where
 
     numberShadowRays = 1
 
-    intersection' = pickObjectAllowBackside (objects world) ray trange
+    --objects' also includes all GeomLights
+    intersection' = pickObjectAllowBackside (objects' world) ray trange
     intersection = (\(Just x) -> x) intersection'   --cast down from Maybe a
     p = getp intersection
     object = fst intersection
     isInside = isBackside intersection
+
+    --check if this is a light source
+    colorEmissive = getEmissiveComponent (material object)
+    isEmissive = not $ isBlack colorEmissive
 
     --we don't want specular highlights, so we use the diffuse component of the BRDF only
     matBRDF _ _ _ = getDiffuseComponent (material object)
     v = vnegate $ direction ray
     n = surfNormal
     colorDiffuse = localIllumination world v p n matBRDF numberShadowRays allowTransparentShadows
-               
+              
     -- Cast reflection ray ------------------------------------------------------------------------
     colorReflection   = traceRay world (spawnRay p reflectionvector) trange (maxdepth -1)
                         
