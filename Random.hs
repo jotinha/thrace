@@ -11,7 +11,6 @@ randomPointsOnSurfaceOf :: Geometry -> Seed -> [Vector3]
 randomPointsOnSurfaceOf (Sphere o r) g = 
   tail $ [o .+. (u .* r) | (u,_) <- iterate randUniSphere (Vector3 0 0 0, g)]
   --iterate f x returns x as the first element, which would be 0,0,0, the center. Ignore the first
-
   where
     randUniSphere (_,g0) = (Vector3 x y z,g2)
       where (r0,g1) = random g0

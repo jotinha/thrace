@@ -46,6 +46,7 @@ colorClamp (Color r g b) = Color (m r) (m g) (m b)
     m = limits 0 1
 
 colorAverage :: [Color] -> Color
+colorAverage [] = black
 colorAverage (x:[]) = x
 colorAverage xs = colorMultiplyScalar (colorSum xs) (1 / (fromIntegral ( length xs )))
 

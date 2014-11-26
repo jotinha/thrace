@@ -1,3 +1,4 @@
 module Tracer (traceRay) where
 
-import Tracers.SimpleRecursive
+--import Tracers.SimpleRecursive
+import Tracers.IndirectLighting
