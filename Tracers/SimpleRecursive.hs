@@ -25,7 +25,7 @@ traceRay world ray trange maxdepth
 
   where
 
-    numberShadowRays = 10
+    numberShadowRays = 1
 
     --objects' also includes all GeomLights
     intersection' = pickObjectAllowBackside (objects' world) ray trange

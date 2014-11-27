@@ -40,13 +40,13 @@ localIllumination world v p n matBRDF nsr useTransparentShadows =
         seed = generateSeed [idx] [p,v,lightPos lightType]
         (Just idx) = elemIndex light (lights world)
         
-        sampleOnce :: Vector3 -> Color
-        sampleOnce vecToLight 
+        sampleOnce :: (Vector3,Float) -> Color
+        sampleOnce (vecToLight,cos_l) 
           | nsr == 0 || not useShadows  = lightComponent
           | shadowAlpha  == 0           = black
           | otherwise                   = lightComponent `colorMultiplyScalar` shadowAlpha
           where
-            lightComponent | ccos_light == 0 = black
+            lightComponent | ccos_i == 0 = black
                            | otherwise = (matBRDF l v n) `colorMultiply` lightIrradianceHere
       
             -- should l,v and n be in the same side of the surface ?? 
@@ -56,8 +56,8 @@ localIllumination world v p n matBRDF nsr useTransparentShadows =
             --l' is relative to center of light. This is *wrong* but avoids noise for surfaces
             --illuminated by area lights.
             --l' = vnormalize $ (lightPos lightType) .-. p
-            ccos_light = max 0 $ l `vdot` n --what if it's inside object??
-            lightIrradianceHere = lightColor `colorMultiplyScalar` (ccos_light * (lightFalloff lightType d))
+            ccos_i = max 0 $ l `vdot` n --what if it's inside object??
+            lightIrradianceHere = lightColor `colorMultiplyScalar` (cos_l * ccos_i * (lightFalloff lightType d))
 
             shadowRay = spawnRay p l
             --don't include emissive sources in objects

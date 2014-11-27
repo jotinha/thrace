@@ -23,16 +23,21 @@ lightPos (PointLight o) = o
 lightPos (DirectionalLight _) = (Vector3 1 1 1) ./ 0
 lightPos (GeomLight geo) = centerOf geo
 
-raysToLight :: LightType -> Vector3 -> Maybe (Int,Seed) -> [Vector3]
-raysToLight (PointLight o) p _ = [o .-. p]
-raysToLight (DirectionalLight d) _ _ = [vnegate d] --should multiply by Inf?
-raysToLight (GeomLight geo) p Nothing      = [(centerOf geo) .-. p]
-raysToLight (GeomLight geo) p (Just (1,_)) = [(centerOf geo) .-. p]
+--returns a list of pairs of vectors l and float cos_l where
+--l is the vector from p to a point in the light surface (unormalized)
+--and cos_l = -n.l the dot product between the vector l and normal at the
+--surface point
+raysToLight :: LightType -> Vector3 -> Maybe (Int,Seed) -> [(Vector3,Float)]
+raysToLight (PointLight o) p _ = [(o .-. p,1)]
+raysToLight (DirectionalLight d) _ _ = [(vnegate d,1)] --should multiply by Inf?
+raysToLight (GeomLight geo) p Nothing      = [((centerOf geo) .-. p,1)]
+raysToLight (GeomLight geo) p (Just (1,_)) = [((centerOf geo) .-. p,1)]
 raysToLight (GeomLight geo) p (Just (n,g)) = take n $
-  [v .-. p | v <- randomPointsOnSurfaceOf geo g]
-  where
-    isPositiveSide v = ((v .-. p) `vdot` (v .-. c)) <= 0
-    first = c .-. p -- use this as first ray?
-    c = centerOf geo
+  [(v, cos_l ) | 
+    s <- randomPointsOnSurfaceOf geo g, 
+    let v = s .-. p,
+    let n = getNormalAt geo s,
+    let cos_l = - ((vnormalize v) `vdot` n), --v and n are facing each other, invert
+    cos_l > 0 ] -- cos_l > 0 selects only positive half sides
 
 
