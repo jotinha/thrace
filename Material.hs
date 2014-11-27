@@ -46,7 +46,7 @@ brdf BlinnPhong{diffuseColor=c,specularColor=s,shininess=m} v l n =
   c `colorAdd` (s `colorMultiplyScalar` (((m + 8) / 8) * (cos_half ** m)))
   where 
     cos_half = h `vdot` n
-    h = (v .+. l) ./ 2          --half vector
+    h = vnormalize (v .+. l)          --half vector
       
 
 getShadowAlpha :: Material -> Float
