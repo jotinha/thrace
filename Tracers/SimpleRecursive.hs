@@ -16,6 +16,8 @@ import Material
 import Tracers.Common
 
 --only purely specular (mirror) reflections and refractions
+--specularColor is ignored (assumes reflects all colors equally)
+
 traceRay :: World -> Ray -> (Float,Float) -> Int -> Color
 traceRay world ray trange maxdepth
   | maxdepth <= 0           = white
@@ -51,6 +53,9 @@ traceRay world ray trange maxdepth
     colorRefraction   = traceRay world (spawnRay p refractionvector) trange (maxdepth -1)
 
     -- Mix refraction and reflection -------------------------------------------------------------
+    -- I think I should multiply colorReflection by (specularColor material). But specularColor should, in
+    -- principle, be the fresnel coefficient, which we already account for. And what about colorRefr?
+
     colorMix = if reflectionAmount > 0 || refractionAmount > 0
                then (colorMultiplyScalar colorReflection $ reflectionAmount / (reflectionAmount + refractionAmount)) 
                       `colorAdd` 

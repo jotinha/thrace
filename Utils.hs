@@ -49,3 +49,8 @@ rootspoly2 a b c | arg < 0    = Nothing
 
 xor :: Bool -> Bool -> Bool
 xor = (/=)
+
+takeConsecutivePairs :: [t] -> [(t,t)]
+takeConsecutivePairs [] = []
+takeConsecutivePairs (x:[]) = [] -- ignores last one if list has odd length
+takeConsecutivePairs (x0:x1:xs) = (x0,x1):takeConsecutivePairs xs

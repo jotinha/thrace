@@ -89,3 +89,5 @@ centerOf :: Geometry -> Vector3
 centerOf (Sphere c r) = c
 centerOf (AABox pmin pmax) = 0.5 *. (pmin .+. pmax)
 
+areaOf :: Geometry -> Float
+areaOf (Sphere c r) = 4*pi*r*r*r/3

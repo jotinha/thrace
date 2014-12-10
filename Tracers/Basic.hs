@@ -19,7 +19,7 @@ traceRay world ray trange _
   | isNothing intersection' = backgroundColor world
   | otherwise               = localColor
   where
-    numberShadowRays = 1
+    numberShadowRays = 10
 
     intersection' = pickObjectAllowBackside (objects world) ray trange
     intersection = (\(Just x) -> x) intersection'   --cast down from Maybe a

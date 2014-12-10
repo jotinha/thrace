@@ -6,6 +6,8 @@ data Vector2 = Vector2 Float Float deriving (Show,Eq)
 data Vector3 = Vector3 Float Float Float deriving (Show,Eq)
 data Vector4 = Vector4 Float Float Float Float deriving (Show,Eq)
 
+up = Vector3 0 1 0
+fwd = Vector3 0 0 (-1)
 
 --vvMap :: (Float -> Float -> Float) -> Vector3 -> Vector3 -> Vector3
 --vvMap f (Vector3 x1 y1 z1) (Vector3 x2 y2 z2) = Vector3 (f x1 x2) (f y1 y2) (f z1 z2)
@@ -67,12 +69,13 @@ class Vector a where
   (.*.) = vvapply (*)
 
   vmagnitude :: a -> Float
-  vmagnitude v = sqrt $ vdot v v
+  vmagnitude = sqrt . vsq
 
   vnormalize :: a -> a
   vnormalize v = v ./ (vmagnitude v)
 
-
+  vsq :: a -> Float
+  vsq v = vdot v v
 
 instance Vector Vector2 where
   (Vector2 x1 y1) .+. (Vector2 x2 y2) = Vector2 (x1 + x2) (y1 + y2)
