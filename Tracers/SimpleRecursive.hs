@@ -14,6 +14,7 @@ import Data.List (elemIndex)
 import Random
 import Material
 import Tracers.Common
+import Config
 
 --only purely specular (mirror) reflections and refractions
 --specularColor is ignored (assumes reflects all colors equally)
@@ -26,8 +27,6 @@ traceRay world ray trange maxdepth
   | otherwise               = colorDiffuse `colorAdd` colorMix
 
   where
-
-    numberShadowRays = 1
 
     --objects' also includes all GeomLights
     intersection' = pickObjectAllowBackside (objects' world) ray trange

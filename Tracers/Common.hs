@@ -12,12 +12,7 @@ import Utils
 import Ray
 import Object
 import Geometry
-
-useShading = True
-useShadows = True
-useReflection = True
-useRefraction = True
-allowTransparentShadows = True -- Only for tracers that support transparency
+import Config
 
 fresnel :: Float -> Float -> Material -> (Float,Float)
 fresnel _ _ (Lambertian _) = (0,0) --no reflection or refraction

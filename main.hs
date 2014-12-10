@@ -12,9 +12,9 @@ import Color
 import World
 import Light
 import Material
+import Config
 
 cameraOrigin = Vector3 0 0 0
-maxdepth = 5
 
 type Resolution = (Int, Int)
 
@@ -31,7 +31,7 @@ pixel2World (imWidth,imHeight) i j = toWorld ( toScreen ( toNDC ( toRaster i j) 
 
 makeImage :: Resolution -> World -> [Color]
 makeImage res@(width,height) world = [
-  colorClamp $ traceRay world (castRay $ pixel2World res i j ) (near,far) maxdepth |
+  colorClamp $ traceRay world (castRay $ pixel2World res i j ) (near,far) maxRayDepth |
     i <- [1..height], 
     j <- [1..width]
   ]
@@ -58,11 +58,9 @@ writePPM (width,height) pixels  | width*height /= length pixels = error "Invalid
 
 #include "examples/area_lights.hs"
 
-myRes = (500,500)
+myImage = makeImage imageRes myWorld
 
-myImage = makeImage myRes myWorld
-
-main = writePPM myRes myImage
+main = writePPM imageRes myImage
 --tri = (Triangle (Vector3 0 0 20) (Vector3 (-10) 0 20) (Vector3 (-10) 10 20)) 
 --main = print $ rayIntersect (makeRay (Vector3 0 0 0) (Vector3 (-5) 5 20)) tri
 --box = AABox (Vector3 (0) (9) (0)) (Vector3 1 10 1)
